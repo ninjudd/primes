@@ -1,5 +1,19 @@
 import { phase, radius, capacity } from './model.js?v=proportional';
 
+// Use continuous estimated spacing rather than the discrete number of primes.
+// Fade the completed layer, not each tiny stroke: canvas alpha precision would
+// otherwise make thousands of subpixel strokes accumulate into an opaque disk.
+export function densityStyle(time, outer) {
+  const spacing = Math.max(0, outer / capacity(time));
+  const density = Math.min(1, spacing);
+  return {
+    ringOpacity: Math.min(1, spacing / .8),
+    dotSize: Math.round(Math.max(.4, Math.max(1.2, Math.min(3.5, spacing * .23)) * Math.sqrt(density)) * 20) / 20,
+    dotOpacity: Math.min(1, Math.sqrt(spacing / .3)),
+    glow: Math.round(9 * density * 2) / 2,
+  };
+}
+
 // Rings share one radial scale, so a cached layer can contract continuously.
 // Rebuild on births/resize and after 2% contraction to keep strokes crisp.
 export class OrbitRenderer {
@@ -30,26 +44,30 @@ export class OrbitRenderer {
     const { ctx, width, height, pixelRatio } = this;
     if (!width || !height) return;
     const outer = Math.max(0, Math.min(width, height) / 2 - 24);
-    const dotSize = Math.round(Math.max(1.2, Math.min(3.5, outer / capacity(system.time) * .23)) * 10) / 10;
+    const style = densityStyle(system.time, outer);
+    const { dotSize } = style;
     let scale = (this.ringTime + 4) / (system.time + 4);
     if (this.count !== system.primes.length || scale < .98 || scale > 1) {
       this.paintRings(system, outer, dotSize);
       scale = 1;
     }
-    const spriteKey = `${dotSize}:${pixelRatio}`;
+    const spriteKey = `${dotSize}:${style.glow}:${pixelRatio}`;
     if (spriteKey !== this.spriteKey) {
-      this.paintSprite(dotSize);
+      this.paintSprite(dotSize, style.glow);
       this.spriteKey = spriteKey;
     }
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.clearRect(0, 0, width, height);
     ctx.translate(width / 2, height / 2);
+    ctx.globalAlpha = style.ringOpacity;
     ctx.drawImage(this.rings, -width * scale / 2, -height * scale / 2, width * scale, height * scale);
+    ctx.globalAlpha = style.dotOpacity;
     for (const prime of system.primes) {
       const r = radius(prime, system.time, outer);
       const angle = phase(prime, system.time) - Math.PI / 2;
       ctx.drawImage(this.sprite, Math.cos(angle) * r - 16, Math.sin(angle) * r - 16, 32, 32);
     }
+    ctx.globalAlpha = 1;
   }
 
   paintRings(system, outer, dotSize) {
@@ -73,7 +91,7 @@ export class OrbitRenderer {
     this.ringTime = system.time;
   }
 
-  paintSprite(dotSize) {
+  paintSprite(dotSize, glow) {
     const ctx = this.spriteCtx;
     this.sprite.width = this.sprite.height = Math.ceil(32 * this.pixelRatio);
     ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
@@ -81,7 +99,7 @@ export class OrbitRenderer {
     ctx.arc(16, 16, dotSize, 0, Math.PI * 2);
     ctx.fillStyle = '#ebd6a5';
     ctx.shadowColor = '#ecd5a56b';
-    ctx.shadowBlur = 9;
+    ctx.shadowBlur = glow;
     ctx.fill();
   }
 }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { OrbitRenderer } from '../renderer.js';
+import { OrbitRenderer, densityStyle } from '../renderer.js';
 
 function surface() {
   const calls = { arc: 0, stroke: 0, image: [] };
@@ -47,4 +47,30 @@ test('birth, reset, resize and substantial contraction invalidate the ring layer
     strokes = renderer.rings.calls.stroke;
     assert.equal(renderer.ringTime, system.time);
   }
+});
+
+
+test('dense scenes fade rings and reduce dots and glow without dropping orbits', () => {
+  const sparse = densityStyle(97, 350);
+  const medium = densityStyle(9007.125, 350);
+  const dense = densityStyle(909007.125, 350);
+  assert.equal(sparse.ringOpacity, 1);
+  assert.equal(sparse.dotOpacity, 1);
+  assert.equal(sparse.glow, 9);
+  assert.ok(medium.ringOpacity < sparse.ringOpacity);
+  assert.ok(dense.ringOpacity < .01);
+  assert.ok(dense.dotOpacity < .2);
+  assert.ok(dense.dotSize < medium.dotSize);
+  assert.equal(dense.glow, 0);
+  assert.ok(dense.dotSize > 0);
+  for (const outer of [0, 136, 350, 700]) {
+    for (const value of Object.values(densityStyle(909007.125, outer))) assert.ok(Number.isFinite(value) && value >= 0);
+  }
+  const canvas = surface();
+  const renderer = new OrbitRenderer(canvas, surface);
+  renderer.resize(800, 800, 2);
+  const system = { time: 909007.125, primes: [2, 3, 5, 7, 11] };
+  renderer.draw(system);
+  assert.equal(canvas.calls.image.length, system.primes.length + 1);
+  assert.equal(canvas.getContext().globalAlpha, 1);
 });
