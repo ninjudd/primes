@@ -1,7 +1,8 @@
-import { OrbitSystem, phase, radius, capacity } from './model.js?v=proportional';
+import { OrbitSystem } from './model.js?v=proportional';
+import { OrbitRenderer } from './renderer.js?v=cached';
 
 const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
+const renderer = new OrbitRenderer(canvas);
 const play = document.querySelector('#play');
 const reset = document.querySelector('#reset');
 const speed = document.querySelector('#speed');
@@ -11,56 +12,28 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let running = !reducedMotion.matches;
 let rate = 1;
 let previous = null;
-let width = 0;
-let height = 0;
-let pixelRatio = 1;
+let frameId = null;
 
 function resize() {
   const rect = canvas.getBoundingClientRect();
-  width = rect.width;
-  height = rect.height;
-  pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.round(width * pixelRatio);
-  canvas.height = Math.round(height * pixelRatio);
+  renderer.resize(rect.width, rect.height, Math.min(window.devicePixelRatio || 1, 2));
   draw();
 }
 
-function draw() {
-  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-  ctx.translate(width / 2, height / 2);
-  const outer = Math.max(0, Math.min(width, height) / 2 - 24);
-  const spacing = outer / capacity(system.time);
-  const dotSize = Math.max(1.2, Math.min(3.5, spacing * 0.23));
-  for (let index = 0; index < system.primes.length; index++) {
-    const prime = system.primes[index];
-    const r = radius(prime, system.time, outer);
-    const angle = phase(prime, system.time) - Math.PI / 2;
-    const hue = 165 + 38 * Math.sin(index * 0.37);
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.lineWidth = 0.8;
-    ctx.strokeStyle = `hsla(${hue}, 25%, 60%, .3)`;
-    ctx.stroke();
-    // The quiet mark at twelve o'clock is zero, without a numeric label.
-    ctx.beginPath();
-    ctx.arc(0, -r, Math.min(1.3, dotSize * 0.45), 0, Math.PI * 2);
-    ctx.fillStyle = '#809d9b';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, dotSize, 0, Math.PI * 2);
-    ctx.fillStyle = '#ebd6a5';
-    ctx.shadowColor = '#ecd5a56b';
-    ctx.shadowBlur = 9;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  }
+function draw() { renderer.draw(system); }
+
+function schedule() {
+  if (frameId !== null) cancelAnimationFrame(frameId);
+  frameId = null;
+  previous = null;
+  if (running && !document.hidden) frameId = requestAnimationFrame(frame);
 }
 
 function syncPlay() {
   play.classList.toggle('paused', !running);
   play.setAttribute('aria-label', running ? 'Pause animation' : 'Play animation');
   play.title = `${running ? 'Pause' : 'Play'} (Space)`;
+  schedule();
 }
 
 play.addEventListener('click', () => {
@@ -85,7 +58,7 @@ window.addEventListener('keydown', event => {
   if (event.code === 'Space') { event.preventDefault(); play.click(); }
   if (event.key.toLowerCase() === 'r') reset.click();
 });
-document.addEventListener('visibilitychange', () => { previous = null; });
+document.addEventListener('visibilitychange', schedule);
 reducedMotion.addEventListener('change', event => {
   if (event.matches) { running = false; previous = null; syncPlay(); }
 });
@@ -93,14 +66,15 @@ new ResizeObserver(resize).observe(canvas);
 window.addEventListener('resize', resize);
 
 function frame(timestamp) {
+  frameId = null;
+  if (!running || document.hidden) return;
   if (running && !document.hidden && previous !== null) {
     // Avoid a jump after a suspended tab or a stalled frame.
     system.advance(Math.min((timestamp - previous) / 1000, 0.1) * rate);
   }
   previous = timestamp;
   draw();
-  requestAnimationFrame(frame);
+  frameId = requestAnimationFrame(frame);
 }
 syncPlay();
 resize();
-requestAnimationFrame(frame);
