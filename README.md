@@ -1,10 +1,58 @@
 # Prime Orbits
 
-A static, full-screen portrait of the primes. Each prime has a concentric ring and a dot; there are no numbers or text on the canvas. Zero is at twelve o'clock and motion is clockwise.
+A moving portrait of the prime numbers. Each prime begins an orbit of its own, surrounding all those that came before it.
 
-At time `p`, the ring for prime `p` and its dot appear together at zero. The dot then completes one revolution every `p` time units. Frame steps stop exactly at each birth, carrying unused time to the following frame, so a new dot never first appears past zero.
+[Watch Prime Orbits](https://ninjudd.com/primes/)
 
-Radii use prime rank divided by the continuous capacity `4 + 1.3 * (t + 4) / log(t + 4)`. This is a prime-number-theorem-shaped estimate with extra headroom, not a discrete prime count. Every ring, including 2, contracts smoothly as time advances. Capacity is tested against the actual prime count through one million. Very long runs eventually become visually dense and require more drawing work; the simulation does not impose a time cap.
+## The riddle
+
+> All that came before me turns,<br>
+> each in an orbit of its own,<br>
+> each returning, in time, to nothing.
+>
+> If even one is empty when I arrive,<br>
+> I am already spoken for—<br>
+> a child of what came before.
+>
+> But when nothing is nowhere to be found,<br>
+> I make a nothing of my own.
+>
+> There I begin,<br>
+> orbiting now among the others,<br>
+> returning again and again<br>
+> as my footsteps multiply,<br>
+> to claim all those that are mine.
+>
+> What am I?
+
+<details>
+<summary>The answer</summary>
+
+The prime numbers.
+
+Each orbit returns to zero at multiples of its prime. If an existing orbit is at zero when the next integer arrives, that number is composite. If none is at zero, the number is prime: it creates a new orbit and begins at zero itself.
+
+</details>
+
+## The idea
+
+Count upward from 2. Each prime gets a concentric orbit with a moving dot. The orbit for 2 takes two counts to complete a turn; the orbit for 3 takes three; the orbit for 5 takes five. They all advance together, each at its own pace.
+
+Zero sits at twelve o'clock. Whenever a dot returns there at an integer count, its prime divides that number. At 4, the 2-orbit is at zero, so no new orbit appears. At 5, neither the 2-orbit nor the 3-orbit is at zero, so 5 begins a new orbit. At 6, both 2 and 3 return to zero. At 7, none returns, and another orbit is born.
+
+This is a sieve expressed through motion: existing primes account for composites, and every unclaimed integer starts a new cycle. The test for a new prime happens at integer counts; between them, the dots move smoothly.
+
+## The visualization
+
+The canvas contains only rings and dots, with no numbers or text. Motion is clockwise. At time `p`, the ring for prime `p` and its dot appear together at zero. Its phase is `2π × ((t − p) mod p) / p`, so it completes one revolution every `p` time units. Frame steps stop exactly at each birth and carry unused time to the following frame, ensuring a new dot first appears at zero.
+
+As the collection grows, every orbit contracts continuously, including the innermost orbit for 2. A new prime never makes the existing rings jump inward. Radius is proportional to prime rank divided by the smooth capacity:
+
+```text
+capacity(t) = 4 + 1.3 × (t + 4) / log(t + 4)
+```
+
+Here `log` is the natural logarithm. The capacity follows the prime-number-theorem scale, `t / log(t)`, with extra headroom. It depends on continuous time rather than the changing number of discovered primes. Capacity is tested against the actual prime count through one million. Very long runs eventually become visually dense and require more drawing work; the simulation imposes no time cap.
 
 ## Use
 
@@ -27,7 +75,7 @@ Use Node.js 24 for the tests. Open http://127.0.0.1:8080 in a browser. Stop the 
 
 ## GitHub Pages
 
-The workflow checks pull requests and publishes only pushes to `main`, after checks pass. Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. Merging the site PR will publish at https://ninjudd.com/primes/ (the account’s existing Pages domain). Only the five static site files are included in the deployment artifact.
+The workflow checks pull requests and publishes only pushes to `main`, after checks pass. Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The site is served at [ninjudd.com/primes](https://ninjudd.com/primes/), using the account’s existing Pages domain. Only the five static site files are included in the deployment artifact.
 
 ## Verification
 
