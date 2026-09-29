@@ -3,7 +3,7 @@
 body { margin: 0; overflow: hidden; }
 main { height: 100svh; min-height: 240px; position: relative; }
 canvas { display: block; width: 100%; height: calc(100% - 100px); }
-.controls { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 13px; padding: 8px 16px 8px 8px; border: 1px solid #263237; border-radius: 999px; background: #10181de8; box-shadow: 0 8px 32px #0003; user-select: none; }
+.controls { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 16px 8px 8px; border: 1px solid #263237; border-radius: 999px; background: #10181de8; box-shadow: 0 8px 32px #0003; user-select: none; }
 button { display: grid; place-items: center; width: 40px; height: 40px; padding: 10px; border: 0; border-radius: 50%; color: #bacdce; background: transparent; cursor: pointer; }
 button:hover { background: #223035; color: #f1e2c1; }
 button:focus-visible, input:focus-visible { outline: 2px solid #eddaa9; outline-offset: 4px; }
@@ -16,5 +16,10 @@ label, output { font-size: 12px; letter-spacing: .02em; }
 input { width: 88px; accent-color: #9bbdb4; cursor: pointer; }
 output { width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
 noscript { position: absolute; top: 45%; width: 100%; text-align: center; }
-@media (max-width: 380px) { .controls { gap: 8px; } input { width: 64px; } }
+@media (max-width: 380px) { .controls { gap: 4px; padding-right: 10px; } input { width: 52px; } label { display: none; } }
 @media (max-height: 420px) { canvas { height: calc(100% - 76px); } .controls { bottom: 12px; } }
+
+button:disabled { opacity: .4; cursor: default; }
+.share-feedback { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); max-width: 95vw; text-align: center; font-size: 12px; }
+#share-link { display: block; width: min(400px, 90vw); background: #10181d; color: #ebd6a5; border: 1px solid #536663; padding: 8px; }
+#share-link[hidden] { display: none; }

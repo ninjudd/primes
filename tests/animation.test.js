@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { OrbitSystem } from '../model.js';
+import { parseMoment, momentURL } from '../sharing.js';
 
-test('pause and hidden tabs stop scheduling; reset and resume keep one loop', () => {
+test('pause, share and hidden tabs stop scheduling; reset and resume keep one loop', async () => {
   const queue = new Map();
   let nextId = 0;
   let draws = 0;
@@ -12,12 +13,17 @@ test('pause and hidden tabs stop scheduling; reset and resume keep one loop', ()
     listeners: {}, value: '0', classList: { toggle() {} },
     addEventListener(name, fn) { this.listeners[name] = fn; },
     dispatchEvent(event) { this.listeners[event.type]?.(event); },
-    setAttribute() {}, getBoundingClientRect: () => ({ width: 800, height: 800 }),
+    setAttribute() {}, focus() {}, select() {}, getBoundingClientRect: () => ({ width: 800, height: 800 }),
   });
-  const elements = Object.fromEntries(['canvas', '#play', '#reset', '#speed', '#speed-value'].map(key => [key, element()]));
+  const elements = Object.fromEntries(['canvas', '#play', '#reset', '#speed', '#speed-value', '#share', '#share-status', '#share-link'].map(key => [key, element()]));
   const doc = { ...element(), hidden: false, querySelector: key => elements[key] };
   const media = { ...element(), matches: false };
+  let copied;
   const context = {
+    parseMoment, momentURL, AbortController,
+    location: { hash: '', pathname: '/primes/', search: '' },
+    history: { replaceState() {} },
+    navigator: { clipboard: { async writeText(url) { copied = url; } } },
     document: doc, window: element(), matchMedia: () => media,
     OrbitSystem, OrbitRenderer: class { resize() {} draw() { draws++; } },
     ResizeObserver: class { observe() {} }, Event: class { constructor(type) { this.type = type; } },
@@ -41,6 +47,26 @@ test('pause and hidden tabs stop scheduling; reset and resume keep one loop', ()
   assert.equal(queue.size, 1);
   const [id, frame] = [...queue][0]; queue.delete(id); frame(100);
   assert.equal(queue.size, 1);
+  await elements['#share'].listeners.click();
+  assert.equal(copied, 'https://ninjudd.com/primes#2');
+  assert.equal(queue.size, 0);
+  assert.equal(elements['#share-status'].textContent, 'Link copied');
+  context.location.hash = '#997.125';
+  await context.window.listeners.hashchange();
+  assert.equal(queue.size, 0);
+  context.navigator.share = async ({ url }) => { copied = url; };
+  await elements['#share'].listeners.click();
+  assert.equal(copied, 'https://ninjudd.com/primes#997.125');
+  context.navigator.share = async () => { throw Object.assign(new Error(), { name: 'AbortError' }); };
+  await elements['#share'].listeners.click();
+  assert.equal(elements['#share-link'].hidden, true);
+  assert.equal(elements['#share'].disabled, false);
+  delete context.navigator.share;
+  context.navigator.clipboard.writeText = async () => { throw new Error('denied'); };
+  await elements['#share'].listeners.click();
+  assert.equal(elements['#share-link'].hidden, false);
+  assert.equal(elements['#share-link'].value, 'https://ninjudd.com/primes#997.125');
+  elements['#play'].listeners.click();
   media.listeners.change({ matches: true });
   assert.equal(queue.size, 0);
 });

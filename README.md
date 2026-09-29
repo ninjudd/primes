@@ -60,8 +60,15 @@ A prime-number-theorem estimate still controls dot size as the collection grows.
 
 - Play/pause: button or Space when a control is not focused.
 - Reset: button or R when a control is not focused. Returns to time 2 and preserves pause and speed settings.
+- Share: pauses at the current moment and opens the device’s share sheet, or copies a link. If copying is unavailable, a selectable link appears.
 - Speed: 0.25×–16×; 1× advances one time unit per second.
 - Reduced-motion preferences start the site paused. Hidden tabs do not advance time.
+
+## Links to a moment
+
+Open `https://ninjudd.com/primes#997.125` to restore time 997.125, paused so the recipient can see the exact arrangement before pressing Play. Integers work too: `#997` starts with the 997-orbit at zero. Sharing retains the full fractional time rather than rounding to a count. It captures the moment the button is pressed; speed and viewport size are not encoded.
+
+Without a number, the page starts at 2 as usual. Invalid fragments are ignored with a short message. Large starting values generate primes in chunks so the page stays responsive; Reset cancels loading and clears the fragment. Extremely large values can still take substantial time and memory to reconstruct. Reset also clears a shared moment from the address bar.
 
 ## Local preview
 
