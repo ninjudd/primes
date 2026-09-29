@@ -1,6 +1,6 @@
-import { parseMoment, momentURL } from './sharing.js';
+import { parseMoment, momentURL } from './sharing.js?v=nonprimes';
 import { OrbitSystem } from './model.js?v=sharing';
-import { OrbitRenderer } from './renderer.js?v=density';
+import { OrbitRenderer } from './renderer.js?v=nonprimes';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
@@ -11,6 +11,8 @@ const speedValue = document.querySelector('#speed-value');
 const share = document.querySelector('#share');
 const status = document.querySelector('#share-status');
 const fallback = document.querySelector('#share-link');
+const nonPrimeToggle = document.querySelector('#non-primes');
+nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
 const system = new OrbitSystem();
 let loading = null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -25,7 +27,15 @@ function resize() {
   draw();
 }
 
-function draw() { renderer.draw(system); }
+function draw() { renderer.draw(system, nonPrimeToggle.checked); }
+nonPrimeToggle.addEventListener('change', () => {
+  const params = new URLSearchParams(location.search);
+  if (nonPrimeToggle.checked) params.set('nonprimes', '1');
+  else params.delete('nonprimes');
+  const query = params.toString();
+  history.replaceState(null, '', location.pathname + (query ? `?${query}` : '') + location.hash);
+  draw();
+});
 
 function schedule() {
   if (frameId !== null) cancelAnimationFrame(frameId);
@@ -66,7 +76,7 @@ speed.addEventListener('input', () => {
 speed.dispatchEvent(new Event('input'));
 share.addEventListener('click', async () => {
   // Capture before any asynchronous work; keep this exact frame visible.
-  const url = momentURL(system.time);
+  const url = momentURL(system.time, nonPrimeToggle.checked);
   running = false;
   syncPlay();
   share.disabled = true;

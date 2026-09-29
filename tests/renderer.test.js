@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { OrbitRenderer, densityStyle } from '../renderer.js';
+import { OrbitRenderer, densityStyle, nonPrimes } from '../renderer.js';
 
 function surface() {
   const calls = { arc: 0, stroke: 0, image: [] };
@@ -73,4 +73,33 @@ test('dense scenes fade rings and reduce dots and glow without dropping orbits',
   renderer.draw(system);
   assert.equal(canvas.calls.image.length, system.primes.length + 1);
   assert.equal(canvas.getContext().globalAlpha, 1);
+});
+
+
+test('non-prime mode includes 1 and composites, and toggles without changing time', () => {
+  assert.deepEqual([...nonPrimes(11.5, [2, 3, 5, 7, 11])], [1, 4, 6, 8, 9, 10]);
+  const canvas = surface();
+  const renderer = new OrbitRenderer(canvas, surface);
+  renderer.resize(800, 800, 1);
+  const system = { time: 11.5, primes: [2, 3, 5, 7, 11] };
+  renderer.draw(system, true);
+  assert.equal(canvas.calls.image.filter(([image]) => image === renderer.dimSprite).length, 6);
+  assert.equal(canvas.calls.image.filter(([image]) => image === renderer.sprite).length, 5);
+  const strokes = renderer.rings.calls.stroke;
+  canvas.calls.image.length = 0;
+  renderer.draw(system, false);
+  assert.equal(canvas.calls.image.length, 6);
+  assert.ok(renderer.rings.calls.stroke > strokes);
+  assert.equal(system.time, 11.5);
+  renderer.draw(system, true);
+  const beforeBirth = renderer.rings.calls.stroke;
+  system.time = 12;
+  canvas.calls.image.length = 0;
+  renderer.draw(system, true);
+  assert.equal(canvas.calls.image.filter(([image]) => image === renderer.dimSprite).length, 7);
+  assert.ok(renderer.rings.calls.stroke > beforeBirth);
+  system.time = 2; system.primes = [2];
+  canvas.calls.image.length = 0;
+  renderer.draw(system, true);
+  assert.equal(canvas.calls.image.length, 3);
 });

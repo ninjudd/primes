@@ -15,12 +15,12 @@ test('pause, share and hidden tabs stop scheduling; reset and resume keep one lo
     dispatchEvent(event) { this.listeners[event.type]?.(event); },
     setAttribute() {}, focus() {}, select() {}, getBoundingClientRect: () => ({ width: 800, height: 800 }),
   });
-  const elements = Object.fromEntries(['canvas', '#play', '#reset', '#speed', '#speed-value', '#share', '#share-status', '#share-link'].map(key => [key, element()]));
+  const elements = Object.fromEntries(['canvas', '#play', '#reset', '#speed', '#speed-value', '#share', '#share-status', '#share-link', '#non-primes'].map(key => [key, element()]));
   const doc = { ...element(), hidden: false, querySelector: key => elements[key] };
   const media = { ...element(), matches: false };
   let copied;
   const context = {
-    parseMoment, momentURL, AbortController,
+    parseMoment, momentURL, AbortController, URLSearchParams,
     location: { hash: '', pathname: '/primes/', search: '' },
     history: { replaceState() {} },
     navigator: { clipboard: { async writeText(url) { copied = url; } } },
