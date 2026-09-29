@@ -25,6 +25,31 @@ export class OrbitSystem {
     this.pending = 0;
   }
 
+  async seek(time, { signal, yieldControl = () => new Promise(resolve => setTimeout(resolve, 0)) } = {}) {
+    if (!Number.isFinite(time) || time < 2 || time > Number.MAX_SAFE_INTEGER - 1024) {
+      throw new RangeError('Invalid start time');
+    }
+    const target = new OrbitSystem();
+    let candidate = 3;
+    let work = 0;
+    // Generate in chunks so a large link can be cancelled without freezing the page.
+    while (true) {
+      if (signal?.aborted) return false;
+      if (target.isPrime(candidate)) {
+        if (candidate > time) break;
+        target.primes.push(candidate);
+      }
+      candidate += 2;
+      if (++work % 2048 === 0) await yieldControl();
+    }
+    if (signal?.aborted) return false;
+    this.time = time;
+    this.primes = target.primes;
+    this.nextPrime = candidate;
+    this.pending = 0;
+    return true;
+  }
+
   advance(elapsed) {
     this.pending += Math.max(0, elapsed);
     const untilBirth = this.nextPrime - this.time;

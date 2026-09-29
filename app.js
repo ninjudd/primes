@@ -1,4 +1,5 @@
-import { OrbitSystem } from './model.js?v=proportional';
+import { parseMoment, momentURL } from './sharing.js';
+import { OrbitSystem } from './model.js?v=sharing';
 import { OrbitRenderer } from './renderer.js?v=cached';
 
 const canvas = document.querySelector('canvas');
@@ -7,7 +8,11 @@ const play = document.querySelector('#play');
 const reset = document.querySelector('#reset');
 const speed = document.querySelector('#speed');
 const speedValue = document.querySelector('#speed-value');
+const share = document.querySelector('#share');
+const status = document.querySelector('#share-status');
+const fallback = document.querySelector('#share-link');
 const system = new OrbitSystem();
+let loading = null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let running = !reducedMotion.matches;
 let rate = 1;
@@ -42,6 +47,12 @@ play.addEventListener('click', () => {
   syncPlay();
 });
 reset.addEventListener('click', () => {
+  loading?.abort();
+  loading = null;
+  play.disabled = share.disabled = false;
+  status.textContent = '';
+  fallback.hidden = true;
+  history.replaceState(null, '', location.pathname + location.search);
   system.reset();
   previous = null;
   draw();
@@ -53,6 +64,60 @@ speed.addEventListener('input', () => {
   speed.setAttribute('aria-valuetext', `${Number(rate.toFixed(2))} times normal speed`);
 });
 speed.dispatchEvent(new Event('input'));
+share.addEventListener('click', async () => {
+  // Capture before any asynchronous work; keep this exact frame visible.
+  const url = momentURL(system.time);
+  running = false;
+  syncPlay();
+  share.disabled = true;
+  status.textContent = '';
+  fallback.hidden = true;
+  history.replaceState(null, '', location.pathname + location.search + `#${system.time}`);
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'Prime Orbits', url });
+      status.textContent = 'Shared';
+    } else {
+      await navigator.clipboard.writeText(url);
+      status.textContent = 'Link copied';
+    }
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      fallback.hidden = false;
+      fallback.value = url;
+      fallback.focus();
+      fallback.select();
+      status.textContent = 'Copy this link';
+    }
+  } finally {
+    share.disabled = Boolean(loading);
+  }
+});
+
+async function loadMoment() {
+  loading?.abort();
+  loading = null;
+  const time = parseMoment(location.hash);
+  if (time === null) {
+    play.disabled = share.disabled = false;
+    status.textContent = location.hash ? 'Invalid start number' : '';
+    return;
+  }
+  const controller = new AbortController();
+  loading = controller;
+  running = false;
+  syncPlay();
+  play.disabled = share.disabled = true;
+  fallback.hidden = true;
+  status.textContent = 'Loading…';
+  const restored = await system.seek(time, { signal: controller.signal });
+  if (loading !== controller) return;
+  loading = null;
+  play.disabled = share.disabled = false;
+  if (restored) { status.textContent = ''; draw(); }
+}
+window.addEventListener('hashchange', loadMoment);
+
 window.addEventListener('keydown', event => {
   if (event.target.closest('button, input') || event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Space') { event.preventDefault(); play.click(); }
@@ -78,3 +143,4 @@ function frame(timestamp) {
 }
 syncPlay();
 resize();
+loadMoment();
