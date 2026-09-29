@@ -46,13 +46,15 @@ This is a sieve expressed through motion: existing primes account for composites
 
 The canvas contains only rings and dots, with no numbers or text. Motion is clockwise. At time `p`, the ring for prime `p` and its dot appear together at zero. Its phase is `2π × ((t − p) mod p) / p`, so it completes one revolution every `p` time units. Frame steps stop exactly at each birth and carry unused time to the following frame, ensuring a new dot first appears at zero.
 
-As the collection grows, every orbit contracts continuously, including the innermost orbit for 2. A new prime never makes the existing rings jump inward. Radius is proportional to prime rank divided by the smooth capacity:
+Each orbit’s circumference is proportional to its prime. Since circumference is `2πr`, its radius is proportional to the prime too:
 
 ```text
-capacity(t) = 4 + 1.3 × (t + 4) / log(t + 4)
+radius(p, t) = availableRadius × p / (t + 4)
 ```
 
-Here `log` is the natural logarithm. The capacity follows the prime-number-theorem scale, `t / log(t)`, with extra headroom. It depends on continuous time rather than the changing number of discovered primes. Capacity is tested against the actual prime count through one million. Very long runs eventually become visually dense and require more drawing work; the simulation imposes no time cap.
+The common scale shrinks continuously with time, including the innermost orbit for 2. New rings never make existing rings jump. Gaps between rings reflect gaps between primes. Because each dot completes a turn in `p` time units, all dots have the same tangential speed at a given instant; the inward motion from contraction is separate.
+
+A prime-number-theorem estimate still controls dot size as the collection grows. Very long runs become visually dense, especially at the center, and require more drawing work; the simulation imposes no time cap.
 
 ## Use
 
@@ -79,6 +81,6 @@ The workflow checks pull requests and publishes only pushes to `main`, after che
 
 ## Verification
 
-`npm test` checks prime discovery, exact zero at birth even across dropped frames, continuous phase, preserved elapsed time, reset, shrinking radii through births, and capacity through one million. All five tests should pass.
+`npm test` checks prime discovery, exact zero at birth even across dropped frames, continuous phase, preserved elapsed time, reset, shrinking radii through births, capacity through one million, proportional circumferences, and equal tangential speeds. All six tests should pass.
 
 For a visual check, let the animation run: rings and dots should appear together at the top, existing rings should never jump at a birth, and dots should move smoothly clockwise. Pause should freeze the scene; reset while paused should leave just the 2-orbit with its dot at the top. Changing speed should update the multiplier without moving a paused scene. At narrow phone widths, all controls should remain visible below the canvas. Check these behaviors in the browser; the mathematical tests do not verify canvas appearance.

@@ -1,4 +1,4 @@
-import { OrbitSystem, phase, radius, capacity } from './model.js';
+import { OrbitSystem, phase, radius, capacity } from './model.js?v=proportional';
 
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
@@ -34,7 +34,7 @@ function draw() {
   const dotSize = Math.max(1.2, Math.min(3.5, spacing * 0.23));
   for (let index = 0; index < system.primes.length; index++) {
     const prime = system.primes[index];
-    const r = radius(index, system.time, outer);
+    const r = radius(prime, system.time, outer);
     const angle = phase(prime, system.time) - Math.PI / 2;
     const hue = 165 + 38 * Math.sin(index * 0.37);
     ctx.beginPath();

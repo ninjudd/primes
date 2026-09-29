@@ -6,8 +6,9 @@ export function capacity(time) {
   return 4 + 1.3 * (time + 4) / Math.log(time + 4);
 }
 
-export function radius(index, time, outerRadius) {
-  return outerRadius * (index + 1) / capacity(time);
+// A common scale preserves circumference ratios and leaves room at the edge.
+export function radius(prime, time, outerRadius) {
+  return outerRadius * prime / (time + 4);
 }
 
 export function phase(prime, time) {
