@@ -95,3 +95,5 @@ For a visual check, let the animation run: rings and dots should appear together
 ## Rendering performance
 
 The rings are cached in a separate canvas and scaled together continuously. That layer is rebuilt on a birth, resize, reset, or after 2% contraction to refresh stroke sharpness. Dot glow is drawn once into a small reusable sprite instead of blurring every dot every frame. The animation loop stops entirely while paused or hidden. Each visible frame still positions every dot, so extremely long runs can eventually slow down.
+
+At high counts, estimated ring spacing also controls visual density. Once spacing falls below a pixel, the ring layer fades and dots get smaller with less glow. The densest dots also become more transparent so overlap reveals curves without washing out the scene. Every prime is still drawn at its exact position; this changes appearance, not the simulation or shared time.
