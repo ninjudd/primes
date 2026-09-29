@@ -5,6 +5,6 @@ export function parseMoment(hash) {
   return Number.isFinite(time) && time >= 2 && time <= Number.MAX_SAFE_INTEGER - 1024 ? time : null;
 }
 
-export function momentURL(time) {
-  return `https://ninjudd.com/primes#${time}`;
+export function momentURL(time, showNonPrimes = false) {
+  return `https://ninjudd.com/primes${showNonPrimes ? '?nonprimes=1' : ''}#${time}`;
 }

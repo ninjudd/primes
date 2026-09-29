@@ -60,13 +60,14 @@ A prime-number-theorem estimate still controls dot size as the collection grows.
 
 - Play/pause: button or Space when a control is not focused.
 - Reset: button or R when a control is not focused. Returns to time 2 and preserves pause and speed settings.
+- Show non-primes: adds muted rings and dim, unglowing dots for non-prime positive integers (including 1). Each has period and radius proportional to its number. Switching views preserves the current time and playback state.
 - Share: pauses at the current moment and opens the device’s share sheet, or copies a link. If copying is unavailable, a selectable link appears.
 - Speed: 0.25×–16×; 1× advances one time unit per second.
 - Reduced-motion preferences start the site paused. Hidden tabs do not advance time.
 
 ## Links to a moment
 
-Open `https://ninjudd.com/primes#997.125` to restore time 997.125, paused so the recipient can see the exact arrangement before pressing Play. Integers work too: `#997` starts with the 997-orbit at zero. Sharing retains the full fractional time rather than rounding to a count. It captures the moment the button is pressed; speed and viewport size are not encoded.
+Open `https://ninjudd.com/primes#997.125` to restore time 997.125, paused so the recipient can see the exact arrangement before pressing Play. Integers work too: `#997` starts with the 997-orbit at zero. Sharing retains the full fractional time rather than rounding to a count. It captures the moment the button is pressed; speed and viewport size are not encoded. The optional `?nonprimes=1` query retains the non-prime checkbox setting.
 
 Without a number, the page starts at 2 as usual. Invalid fragments are ignored with a short message. Large starting values generate primes in chunks so the page stays responsive; Reset cancels loading and clears the fragment. Extremely large values can still take substantial time and memory to reconstruct. Reset also clears a shared moment from the address bar.
 
@@ -97,3 +98,5 @@ For a visual check, let the animation run: rings and dots should appear together
 The rings are cached in a separate canvas and scaled together continuously. That layer is rebuilt on a birth, resize, reset, or after 2% contraction to refresh stroke sharpness. Dot glow is drawn once into a small reusable sprite instead of blurring every dot every frame. The animation loop stops entirely while paused or hidden. Each visible frame still positions every dot, so extremely long runs can eventually slow down.
 
 At high counts, estimated ring spacing also controls visual density. Once spacing falls below a pixel, the ring layer fades and dots get smaller with less glow. The densest dots also become more transparent so overlap reveals curves without washing out the scene. Every prime is still drawn at its exact position; this changes appearance, not the simulation or shared time.
+
+Showing non-primes adds a dot for every non-prime integer reached, so very high starting numbers require more rendering work. Their glow is disabled and opacity adapts to density. Non-prime rings occupying the same physical pixel are combined in the cached ring layer; all non-prime dots remain positioned individually. Primes are drawn on top to keep them distinct.

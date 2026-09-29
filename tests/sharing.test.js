@@ -43,3 +43,9 @@ test('large starts yield and can be cancelled without replacing current state', 
   assert.deepEqual(system.primes, [2]);
   await assert.rejects(system.seek(Infinity), RangeError);
 });
+
+
+test('shared links include the non-prime option only when selected', () => {
+  assert.equal(momentURL(11.5, true), 'https://ninjudd.com/primes?nonprimes=1#11.5');
+  assert.equal(momentURL(11.5, false), 'https://ninjudd.com/primes#11.5');
+});
