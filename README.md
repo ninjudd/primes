@@ -81,6 +81,10 @@ The workflow checks pull requests and publishes only pushes to `main`, after che
 
 ## Verification
 
-`npm test` checks prime discovery, exact zero at birth even across dropped frames, continuous phase, preserved elapsed time, reset, shrinking radii through births, capacity through one million, proportional circumferences, and equal tangential speeds. All six tests should pass.
+`npm test` checks prime discovery, exact zero at birth even across dropped frames, continuous phase, preserved elapsed time, reset, shrinking radii through births, capacity through one million, proportional circumferences, and equal tangential speeds. All tests should pass.
 
 For a visual check, let the animation run: rings and dots should appear together at the top, existing rings should never jump at a birth, and dots should move smoothly clockwise. Pause should freeze the scene; reset while paused should leave just the 2-orbit with its dot at the top. Changing speed should update the multiplier without moving a paused scene. At narrow phone widths, all controls should remain visible below the canvas. Check these behaviors in the browser; the mathematical tests do not verify canvas appearance.
+
+## Rendering performance
+
+The rings are cached in a separate canvas and scaled together continuously. That layer is rebuilt on a birth, resize, reset, or after 2% contraction to refresh stroke sharpness. Dot glow is drawn once into a small reusable sprite instead of blurring every dot every frame. The animation loop stops entirely while paused or hidden. Each visible frame still positions every dot, so extremely long runs can eventually slow down.
