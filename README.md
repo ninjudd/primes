@@ -27,7 +27,7 @@ Use Node.js 24 for the tests. Open http://127.0.0.1:8080 in a browser. Stop the 
 
 ## GitHub Pages
 
-The workflow checks pull requests and publishes only pushes to `main`, after checks pass. Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. Merging the site PR will publish at https://ninjudd.github.io/primes/. Only the five static site files are included in the deployment artifact.
+The workflow checks pull requests and publishes only pushes to `main`, after checks pass. Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. Merging the site PR will publish at https://ninjudd.com/primes/ (the account’s existing Pages domain). Only the five static site files are included in the deployment artifact.
 
 ## Verification
 
