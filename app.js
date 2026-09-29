@@ -11,8 +11,10 @@ const speedValue = document.querySelector('#speed-value');
 const share = document.querySelector('#share');
 const status = document.querySelector('#share-status');
 const fallback = document.querySelector('#share-link');
+const primeToggle = document.querySelector('#primes-only');
 const nonPrimeToggle = document.querySelector('#non-primes');
 nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
+primeToggle.checked = !nonPrimeToggle.checked;
 const system = new OrbitSystem();
 let loading = null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -28,14 +30,16 @@ function resize() {
 }
 
 function draw() { renderer.draw(system, nonPrimeToggle.checked); }
-nonPrimeToggle.addEventListener('change', () => {
+function changeNumberSet() {
   const params = new URLSearchParams(location.search);
   if (nonPrimeToggle.checked) params.set('nonprimes', '1');
   else params.delete('nonprimes');
   const query = params.toString();
   history.replaceState(null, '', location.pathname + (query ? `?${query}` : '') + location.hash);
   draw();
-});
+}
+primeToggle.addEventListener('change', changeNumberSet);
+nonPrimeToggle.addEventListener('change', changeNumberSet);
 
 function schedule() {
   if (frameId !== null) cancelAnimationFrame(frameId);

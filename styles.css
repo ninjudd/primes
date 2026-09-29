@@ -24,6 +24,11 @@ button:disabled { opacity: .4; cursor: default; }
 #share-link { display: block; width: min(400px, 90vw); background: #10181d; color: #ebd6a5; border: 1px solid #536663; padding: 8px; }
 #share-link[hidden] { display: none; }
 
-.non-prime-option { display: flex; align-items: center; gap: 8px; position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%); white-space: nowrap; cursor: pointer; }
-.non-prime-option input { width: 16px; height: 16px; margin: 0; }
-@media (max-height: 420px) { .non-prime-option { bottom: 74px; } }
+/* Native radios keep arrow-key selection and screen-reader semantics. */
+.number-set { display: flex; position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%); padding: 3px; border: 1px solid #263237; border-radius: 999px; background: #10181de8; }
+.number-set input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.number-set label { display: grid; place-items: center; width: 44px; height: 32px; border-radius: 999px; font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-size: 23px; color: #718488; cursor: pointer; user-select: none; }
+.number-set label:hover { color: #bacdce; }
+.number-set input:checked + label { background: #26363b; color: #ebd6a5; }
+.number-set input:focus-visible + label { outline: 2px solid #eddaa9; outline-offset: 2px; }
+@media (max-height: 420px) { .number-set { bottom: 74px; } }
