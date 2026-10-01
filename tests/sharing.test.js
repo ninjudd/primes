@@ -66,7 +66,7 @@ test('compact version links retain time, mode and display options', async () => 
   }
   assert.equal(momentURL(30, false, 2), 'https://ninjudd.com/primes#30/2');
   assert.equal(momentURL(30, false, 4), 'https://ninjudd.com/primes#30/4');
-  assert.equal(momentDivisions('#30', '?experiment=quarter'), 4);
+  assert.equal(momentDivisions('#30', '?experiment=quarter'), 1);
   assert.equal(momentDivisions('#30/2', '?experiment=quarter'), 2);
   for (const hash of ['#30/3', '#30/', '#30/4/2']) assert.equal(parseMoment(hash), null);
 });

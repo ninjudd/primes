@@ -1,5 +1,9 @@
 import { phase, radius, capacity } from './model.js?v=beam';
 
+function dotRadiusScale(system) {
+  return system.divisions === 4 ? .5 : system.divisions === 2 ? .75 : 1;
+}
+
 function orbitPhase(value, system) {
   return phase(value, system.time) + (system.alternating ? (value % 1) * Math.PI * 2 : 0);
 }
@@ -129,7 +133,7 @@ export class OrbitRenderer {
     if (!width || !height) return;
     const outer = Math.max(0, Math.min(width, height) / 2 - 24);
     const style = densityStyle(system.time, outer);
-    const dotScale = 1 / (system.divisions || 1);
+    const dotScale = dotRadiusScale(system);
     const dotSize = style.dotSize * dotScale;
     const glow = style.glow * dotScale;
     let scale = (this.ringTime + 4) / (system.time + 4);
@@ -192,7 +196,7 @@ export class OrbitRenderer {
     }
     if (beam.impact) {
       ctx.beginPath();
-      ctx.arc(beam.impactX, beam.impactY, (beam.birth ? 4 : 2.5) / (system.divisions || 1), 0, Math.PI * 2);
+      ctx.arc(beam.impactX, beam.impactY, (beam.birth ? 4 : 2.5) * dotRadiusScale(system), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -214,7 +218,7 @@ export class OrbitRenderer {
     }
     if (beam.impact) {
       ctx.beginPath();
-      ctx.arc(beam.endX, beam.endY, 2.5 / (system.divisions || 1), 0, Math.PI * 2);
+      ctx.arc(beam.endX, beam.endY, 2.5 * dotRadiusScale(system), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;

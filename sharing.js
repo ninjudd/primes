@@ -10,11 +10,10 @@ export function momentHash(time, divisions = 1) {
   return `#${time}${divisions === 1 ? '' : `/${divisions}`}`;
 }
 
-export function momentDivisions(hash, search = '') {
+export function momentDivisions(hash) {
   const suffix = hash.split('/')[1];
   if (['1', '2', '4'].includes(suffix)) return Number(suffix);
-  const experiment = new URLSearchParams(search).get('experiment');
-  return experiment === 'quarter' ? 4 : experiment === 'alternating' ? 2 : 1;
+  return 1;
 }
 
 export function momentURL(time, showNonPrimes = false, divisions = 1, showRings = true) {

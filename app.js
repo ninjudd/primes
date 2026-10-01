@@ -1,7 +1,7 @@
-import { parseMoment, momentURL, momentHash, momentDivisions } from './sharing.js?v=hash-version';
+import { parseMoment, momentURL, momentHash, momentDivisions } from './sharing.js?v=hash-only';
 import { AlternatingSystem } from './alternating.js?v=quarter';
 import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=scaled-dots';
+import { OrbitRenderer } from './renderer.js?v=larger-dots';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
@@ -33,7 +33,7 @@ const primeToggle = document.querySelector('#primes-only');
 const nonPrimeToggle = document.querySelector('#non-primes');
 nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
 primeToggle.checked = !nonPrimeToggle.checked;
-const divisions = momentDivisions(location.hash, location.search);
+const divisions = momentDivisions(location.hash);
 const alternating = divisions !== 1;
 const system = alternating
   ? new AlternatingSystem(divisions) : new OrbitSystem();
@@ -156,7 +156,7 @@ share.addEventListener('click', async () => {
 });
 
 async function loadMoment() {
-  if (momentDivisions(location.hash, location.search) !== divisions) {
+  if (momentDivisions(location.hash) !== divisions) {
     location.reload();
     return;
   }
