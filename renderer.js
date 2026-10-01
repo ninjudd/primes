@@ -124,15 +124,15 @@ export class OrbitRenderer {
     this.spriteKey = '';
   }
 
-  draw(system, showNonPrimes = false) {
+  draw(system, showNonPrimes = false, showRings = true) {
     const { ctx, width, height, pixelRatio } = this;
     if (!width || !height) return;
     const outer = Math.max(0, Math.min(width, height) / 2 - 24);
     const style = densityStyle(system.time, outer);
     const { dotSize } = style;
     let scale = (this.ringTime + 4) / (system.time + 4);
-    if (this.count !== system.primes.length || this.showNonPrimes !== showNonPrimes ||
-        (showNonPrimes && this.integerTime !== (Math.floor(system.time * (system.divisions || 1)))) || scale < .98 || scale > 1) {
+    if (showRings && (this.count !== system.primes.length || this.showNonPrimes !== showNonPrimes ||
+        (showNonPrimes && this.integerTime !== (Math.floor(system.time * (system.divisions || 1)))) || scale < .98 || scale > 1)) {
       this.paintRings(system, outer, dotSize, showNonPrimes);
       scale = 1;
     }
@@ -145,7 +145,7 @@ export class OrbitRenderer {
     ctx.clearRect(0, 0, width, height);
     ctx.translate(width / 2, height / 2);
     ctx.globalAlpha = showNonPrimes ? Math.min(style.ringOpacity, outer / (system.time + 4) / .8) : style.ringOpacity;
-    ctx.drawImage(this.rings, -width * scale / 2, -height * scale / 2, width * scale, height * scale);
+    if (showRings) ctx.drawImage(this.rings, -width * scale / 2, -height * scale / 2, width * scale, height * scale);
     if (showNonPrimes) {
       // Extra dots have no glow and are drawn underneath the prime dots.
       ctx.globalAlpha = .22 * Math.min(style.dotOpacity, Math.sqrt(outer / (system.time + 4) / .3));

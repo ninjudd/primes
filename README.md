@@ -118,3 +118,5 @@ Open `?experiment=alternating` for an opt-in experiment. It starts with a downwa
 Shots retain the early-arrival treatment, now within half-count intervals. Shared experiment links retain the experiment parameter and current host. Seeking is limited to 100000 in this preview; reconstruction yields periodically and can be cancelled.
 
 The version selector also offers ¼ (`?experiment=quarter`). It starts at 1.25 and fires up at integers, right at .25, down at .5, and left at .75. Each orbit starts in its shot direction and retains a period equal to its value. The regular 1 mode is the default without an experiment parameter.
+
+The concentric-circle icon toggles the rings without hiding dots or beams. Hidden rings use `rings=0` in the URL and are preserved in shared moments and version switches.

@@ -35,3 +35,8 @@ button:disabled { opacity: .4; cursor: default; }
 @media (max-height: 420px) { .view-options { bottom: 74px; } }
 
 .version-set label { font-family: ui-sans-serif, system-ui, sans-serif; }
+
+#rings { border: 1px solid #263237; border-radius: 50%; background: #10181de8; }
+#rings[aria-pressed="true"] { color: #ebd6a5; }
+#rings .rings-slash { display: none; }
+#rings[aria-pressed="false"] .rings-slash { display: block; }

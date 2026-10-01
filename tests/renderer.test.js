@@ -103,3 +103,19 @@ test('non-prime mode includes 1 and composites, and toggles without changing tim
   renderer.draw(system, true);
   assert.equal(canvas.calls.image.length, 3);
 });
+
+test('hidden circles skip the ring layer while retaining dots and restore current rings', () => {
+  const canvas = surface();
+  const renderer = new OrbitRenderer(canvas, surface);
+  renderer.resize(800, 800, 1);
+  const system = { time: 5, primes: [2, 3, 5] };
+  renderer.draw(system, false, false);
+  assert.equal(renderer.rings.calls.arc, 0);
+  assert.equal(canvas.calls.image.length, 3);
+  assert.ok(canvas.calls.image.every(([source]) => source === renderer.sprite));
+  system.time = 7;
+  system.primes.push(7);
+  renderer.draw(system, false, true);
+  assert.equal(renderer.ringTime, 7);
+  assert.ok(canvas.calls.image.some(([source]) => source === renderer.rings));
+});

@@ -1,7 +1,7 @@
 import { parseMoment, momentURL } from './sharing.js?v=quarter';
 import { AlternatingSystem } from './alternating.js?v=quarter';
 import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=quarter';
+import { OrbitRenderer } from './renderer.js?v=hide-rings';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
@@ -10,6 +10,23 @@ const reset = document.querySelector('#reset');
 const speed = document.querySelector('#speed');
 const speedValue = document.querySelector('#speed-value');
 const share = document.querySelector('#share');
+const ringsToggle = document.querySelector('#rings');
+let showRings = new URLSearchParams(location.search).get('rings') !== '0';
+function syncRings() {
+  ringsToggle.setAttribute('aria-pressed', String(showRings));
+  ringsToggle.setAttribute('aria-label', showRings ? 'Hide circles' : 'Show circles');
+  ringsToggle.title = showRings ? 'Hide circles' : 'Show circles';
+}
+syncRings();
+ringsToggle.addEventListener('click', () => {
+  showRings = !showRings;
+  const url = new URL(location.href);
+  if (showRings) url.searchParams.delete('rings');
+  else url.searchParams.set('rings', '0');
+  history.replaceState(null, '', url.pathname + url.search + url.hash);
+  syncRings();
+  draw();
+});
 const status = document.querySelector('#share-status');
 const fallback = document.querySelector('#share-link');
 const primeToggle = document.querySelector('#primes-only');
@@ -61,7 +78,7 @@ function resize() {
   draw();
 }
 
-function draw() { renderer.draw(system, nonPrimeToggle.checked); }
+function draw() { renderer.draw(system, nonPrimeToggle.checked, showRings); }
 function changeNumberSet() {
   const params = new URLSearchParams(location.search);
   if (nonPrimeToggle.checked) params.set('nonprimes', '1');
@@ -113,6 +130,7 @@ speed.dispatchEvent(new Event('input'));
 share.addEventListener('click', async () => {
   // Capture before any asynchronous work; keep this exact frame visible.
   const shared = new URL(alternating ? location.href : momentURL(system.time, nonPrimeToggle.checked));
+  if (!showRings) shared.searchParams.set('rings', '0');
   shared.hash = String(system.time);
   const url = shared.href;
   running = false;
