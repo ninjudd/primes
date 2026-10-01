@@ -36,7 +36,7 @@ button:disabled { opacity: .4; cursor: default; }
 
 .version-set label { font-family: ui-sans-serif, system-ui, sans-serif; }
 
-#rings { border: 1px solid #263237; border-radius: 50%; background: #10181de8; }
+#rings { padding: 0; flex: 0 0 40px; border: 1px solid #263237; border-radius: 50%; background: #10181de8; }
 #rings[aria-pressed="true"] { color: #ebd6a5; }
 #rings .rings-slash { display: none; }
 #rings[aria-pressed="false"] .rings-slash { display: block; }
