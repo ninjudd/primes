@@ -43,7 +43,7 @@ test('seek restores the same pulse and it fades without changing the target', as
 });
 
 
-test('beam travels early but arrives and creates the orbit only at the tick', async () => {
+test('beam travels early while impact and orbit creation remain at the tick', async () => {
   for (const [number, blocker] of [[7, null], [9, 3], [10, 2]]) {
     const system = new OrbitSystem();
     await system.seek(number - .3);
@@ -83,4 +83,20 @@ test('earlier launch meets zero and the impact follows the departing dot', async
   assert.equal(after.impactX, Math.cos(angle) * after.length);
   assert.equal(after.impactY, Math.sin(angle) * after.length);
   assert.equal(after.drawTrail, false);
+});
+
+
+test('beam tip arrives slightly early without creating a premature prime', async () => {
+  const system = new OrbitSystem();
+  await system.seek(6.93);
+  assert.ok(beamStyle(system, 300).end < beamStyle(system, 300).length);
+  await system.seek(6.95);
+  const waiting = beamStyle(system, 300);
+  assert.equal(waiting.end, waiting.length);
+  assert.equal(waiting.impact, false);
+  assert.ok(!system.primes.includes(7));
+  system.advance(.06);
+  assert.equal(system.time, 7);
+  assert.ok(system.primes.includes(7));
+  assert.equal(beamStyle(system, 300).impact, true);
 });

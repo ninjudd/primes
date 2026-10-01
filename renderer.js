@@ -18,6 +18,7 @@ export function beamStyle(system, outer) {
   if (!system.beam) return null;
   const fraction = system.time - Math.floor(system.time);
   const lead = .5;
+  const arrivalLead = .06;
   const afterglow = .15;
   let event;
   let progress;
@@ -26,7 +27,9 @@ export function beamStyle(system, outer) {
   if (fraction >= 1 - lead) {
     // Predict only the destination. Prime creation still occurs at the tick.
     event = system.eventAt(Math.floor(system.time) + 1);
-    progress = (fraction - (1 - lead)) / lead;
+    // Let the tip reach zero slightly ahead of the mathematical collision.
+    // Hold it there until the dot arrives; births remain exactly on the tick.
+    progress = Math.min(1, (fraction - (1 - lead)) / (lead - arrivalLead));
     opacity = .7 * Math.min(1, progress / .15);
   } else if (fraction < afterglow) {
     event = system.beam;
