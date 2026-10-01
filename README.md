@@ -103,6 +103,8 @@ Showing non-primes adds a dot for every non-prime integer reached, so very high 
 
 ## The zero beam
 
+A small warm dot marks zero at the center and remains visible between shots.
+
 During the final 0.35 simulation units before each integer count, a short beam travels vertically upward from the center along the zero direction, arriving exactly at the count. For a composite number it stops at the innermost prime orbit whose dot is at zero: the smallest prime divisor. For a prime, nothing blocks it, so it reaches the newly born orbit. Prime births use a warm gold pulse; blocked counts use a muted blue-gray pulse. The destination is predicted before the count; prime orbits still appear only at their exact birth time. A brief impact fades over 0.15 simulation units, preserving smooth orbital motion. Its impact mark records the zero position rather than following the dot after impact.
 
 Only prime dots block the beam in both ℙ and ℕ modes. Optional non-prime dots, including 1, are display context. Pausing freezes the pulse, and shared times restore its exact state. At very high speeds or low frame rates, the clock can lag while it presents every integer event; no count is skipped.

@@ -123,6 +123,11 @@ export class OrbitRenderer {
     }
     ctx.globalAlpha = 1;
     this.paintBeam(system, outer);
+    // Zero remains visible between shots as the source of the beam.
+    ctx.beginPath();
+    ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ebd6a5';
+    ctx.fill();
   }
 
   paintBeam(system, outer) {
