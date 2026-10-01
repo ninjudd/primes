@@ -1,4 +1,4 @@
-import { phase, radius, capacity } from './model.js?v=proportional';
+import { phase, radius, capacity } from './model.js?v=beam';
 
 // Use continuous estimated spacing rather than the discrete number of primes.
 // Fade the completed layer, not each tiny stroke: canvas alpha precision would
@@ -11,6 +11,17 @@ export function densityStyle(time, outer) {
     dotSize: Math.round(Math.max(.4, Math.max(1.2, Math.min(3.5, spacing * .23)) * Math.sqrt(density)) * 20) / 20,
     dotOpacity: Math.min(1, Math.sqrt(spacing / .3)),
     glow: Math.round(9 * density * 2) / 2,
+  };
+}
+
+export function beamStyle(system, outer) {
+  if (!system.beam) return null;
+  const age = system.time - system.beam.number;
+  if (age < 0 || age >= .45) return null;
+  return {
+    length: radius(system.beam.blocker ?? system.beam.number, system.time, outer),
+    opacity: .7 * (1 - age / .45) ** 2,
+    birth: system.beam.blocker === null,
   };
 }
 
@@ -88,6 +99,26 @@ export class OrbitRenderer {
       const angle = phase(prime, system.time) - Math.PI / 2;
       ctx.drawImage(this.sprite, Math.cos(angle) * r - 16, Math.sin(angle) * r - 16, 32, 32);
     }
+    ctx.globalAlpha = 1;
+    this.paintBeam(system, outer);
+  }
+
+  paintBeam(system, outer) {
+    const beam = beamStyle(system, outer);
+    if (!beam) return;
+    const ctx = this.ctx;
+    ctx.globalAlpha = beam.opacity;
+    ctx.strokeStyle = beam.birth ? '#ebd6a5' : '#9cb1b2';
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -beam.length);
+    ctx.stroke();
+    // A small impact point stays on the zero ray as the pulse fades.
+    ctx.beginPath();
+    ctx.arc(0, -beam.length, beam.birth ? 4 : 2.5, 0, Math.PI * 2);
+    ctx.fill();
     ctx.globalAlpha = 1;
   }
 

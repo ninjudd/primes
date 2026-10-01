@@ -23,6 +23,7 @@ export class OrbitSystem {
     this.primes = [2];
     this.nextPrime = 3;
     this.pending = 0;
+    this.beam = { number: 2, blocker: null };
   }
 
   async seek(time, { signal, yieldControl = () => new Promise(resolve => setTimeout(resolve, 0)) } = {}) {
@@ -47,25 +48,41 @@ export class OrbitSystem {
     this.primes = target.primes;
     this.nextPrime = candidate;
     this.pending = 0;
+    this.beam = this.eventAt(Math.floor(time));
     return true;
   }
 
   advance(elapsed) {
     this.pending += Math.max(0, elapsed);
-    const untilBirth = this.nextPrime - this.time;
-    if (this.pending < untilBirth) {
+    const nextInteger = Math.floor(this.time) + 1;
+    const untilEvent = nextInteger - this.time;
+    if (this.pending < untilEvent) {
       this.time += this.pending;
       this.pending = 0;
       return;
     }
-    // Render every birth at exactly p, even if a frame straddles the event.
-    // Retain the remainder for the following frame instead of losing time.
-    this.time = this.nextPrime;
-    this.pending -= untilBirth;
-    this.primes.push(this.nextPrime);
-    let candidate = this.nextPrime + 2;
-    while (!this.isPrime(candidate)) candidate += 2;
-    this.nextPrime = candidate;
+    // Give each integer its own frame, including blocked composite events.
+    // Retain unused elapsed time so births and collisions occur exactly at zero.
+    this.time = nextInteger;
+    this.pending -= untilEvent;
+    this.beam = this.eventAt(nextInteger);
+    if (nextInteger === this.nextPrime) {
+      this.primes.push(this.nextPrime);
+      let candidate = this.nextPrime + 2;
+      while (!this.isPrime(candidate)) candidate += 2;
+      this.nextPrime = candidate;
+    }
+  }
+
+  eventAt(number) {
+    // The innermost orbit at zero is the smallest prime factor. Ignore the
+    // number's own orbit, and ignore non-prime display orbits (especially 1).
+    let blocker = null;
+    for (const prime of this.primes) {
+      if (prime * prime > number) break;
+      if (number % prime === 0) { blocker = prime; break; }
+    }
+    return { number, blocker };
   }
 
   isPrime(candidate) {
