@@ -44,7 +44,7 @@ This is a sieve expressed through motion: existing primes account for composites
 
 ## The visualization
 
-The canvas contains only rings and dots, with no numbers or text. Motion is clockwise. At time `p`, the ring for prime `p` and its dot appear together at zero. Its phase is `2π × ((t − p) mod p) / p`, so it completes one revolution every `p` time units. Frame steps stop exactly at each birth and carry unused time to the following frame, ensuring a new dot first appears at zero.
+The canvas contains only rings and dots, with no numbers or text. Motion is clockwise. At time `p`, the ring for prime `p` and its dot appear together at zero. Its phase is `2π × ((t − p) mod p) / p`, so it completes one revolution every `p` time units. Frame steps stop exactly at every integer count and carry unused time to the following frame, ensuring collisions and prime births appear at zero.
 
 Each orbit’s circumference is proportional to its prime. Since circumference is `2πr`, its radius is proportional to the prime too:
 
@@ -100,3 +100,13 @@ The rings are cached in a separate canvas and scaled together continuously. That
 At high counts, estimated ring spacing also controls visual density. Once spacing falls below a pixel, the ring layer fades and dots get smaller with less glow. The densest dots also become more transparent so overlap reveals curves without washing out the scene. Every prime is still drawn at its exact position; this changes appearance, not the simulation or shared time.
 
 Showing non-primes adds a dot for every non-prime integer reached, so very high starting numbers require more rendering work. Their glow is disabled and opacity adapts to density. Non-prime rings occupying the same physical pixel are combined in the cached ring layer; all non-prime dots remain positioned individually. Primes are drawn on top to keep them distinct.
+
+## The zero beam
+
+A small warm dot marks zero at the center and remains visible between shots.
+
+During the final 0.5 simulation units before each integer count, a short beam travels vertically upward from the center along the zero direction, reaching the zero position 0.06 counts early and holding briefly for the dot to arrive. For a composite number it stops at the innermost prime orbit whose dot is at zero: the smallest prime divisor. For a prime, nothing blocks it, so it reaches the newly born orbit. Each beam matches its destination ring’s color, opacity, and stroke width. The impact and prime creation still happen at the integer count. The destination is predicted before the count; prime orbits still appear only at their exact birth time. A brief impact fades over 0.15 simulation units, preserving smooth orbital motion. After impact, the beam trail disappears and the brief impact mark follows the struck dot, so it does not look like a missed shot as the dot moves away.
+
+Only prime dots block the beam in both ℙ and ℕ modes. Optional non-prime dots, including 1, are display context. Pausing freezes the pulse, and shared times restore its exact state. At very high speeds or low frame rates, the clock can lag while it presents every integer event; no count is skipped.
+
+In ℕ mode, composite counts launch two synchronized beams from the center: the prime-colored beam stops at the blocking prime and a dim gray beam travels to the new number's orbit. Both use the same launch and arrival timing; the gray ring and dot appear at the integer count with no reveal delay. Each impact follows its own dot afterward. ℙ mode has only the prime beam, and prime births use a single prime-colored beam in either mode.

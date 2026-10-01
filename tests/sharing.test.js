@@ -26,6 +26,9 @@ test('seek reconstructs the same primes and phases as uninterrupted animation', 
   assert.equal(restored.primes.at(-1), 101);
   assert.equal(phase(101, restored.time), 0);
   restored.advance(2);
+  assert.equal(restored.time, 102);
+  assert.equal(restored.beam.blocker, 2);
+  restored.advance(0);
   assert.equal(restored.time, 103);
   assert.equal(restored.primes.at(-1), 103);
 });
