@@ -42,6 +42,9 @@ export function beamStyle(system, outer) {
   const length = radius(event.blocker ?? event.number, system.time, outer);
   const angle = phase(event.blocker ?? event.number, system.time) - Math.PI / 2;
   return {
+    number: event.number,
+    blocker: event.blocker,
+    progress,
     impactX: Math.cos(angle) * length,
     impactY: Math.sin(angle) * length,
     drawTrail: !impact || fraction === 0,
@@ -51,6 +54,22 @@ export function beamStyle(system, outer) {
     opacity,
     impact,
     birth: event.blocker === null,
+  };
+}
+
+export function continuationStyle(system, outer, enabled) {
+  const primary = beamStyle(system, outer);
+  if (!enabled || !primary || primary.blocker === null) return null;
+  const length = radius(primary.number, system.time, outer);
+  const angle = phase(primary.number, system.time) - Math.PI / 2;
+  return {
+    startX: 0, startY: -length * Math.max(0, primary.progress - .22),
+    endX: primary.impact ? Math.cos(angle) * length : 0,
+    endY: primary.impact ? Math.sin(angle) * length : -length * primary.progress,
+    impact: primary.impact,
+    opacity: primary.opacity / .7 * .12 * Math.min(
+      densityStyle(system.time, outer).ringOpacity, outer / (system.time + 4) / .8),
+    drawTrail: primary.drawTrail,
   };
 }
 
@@ -116,7 +135,7 @@ export class OrbitRenderer {
     if (showNonPrimes) {
       // Extra dots have no glow and are drawn underneath the prime dots.
       ctx.globalAlpha = .22 * Math.min(style.dotOpacity, Math.sqrt(outer / (system.time + 4) / .3));
-      for (const number of nonPrimes(system.time, system.primes)) {
+      for (const number of nonPrimes(Math.floor(system.time), system.primes)) {
         const r = radius(number, system.time, outer);
         const angle = phase(number, system.time) - Math.PI / 2;
         ctx.drawImage(this.dimSprite, Math.cos(angle) * r - 4, Math.sin(angle) * r - 4, 8, 8);
@@ -129,6 +148,7 @@ export class OrbitRenderer {
       ctx.drawImage(this.sprite, Math.cos(angle) * r - 16, Math.sin(angle) * r - 16, 32, 32);
     }
     ctx.globalAlpha = 1;
+    this.paintContinuation(system, outer, showNonPrimes);
     this.paintBeam(system, outer);
     // Zero remains visible between shots as the source of the beam.
     ctx.beginPath();
@@ -142,7 +162,7 @@ export class OrbitRenderer {
     if (!beam) return;
     const ctx = this.ctx;
     ctx.globalAlpha = beam.opacity;
-    ctx.strokeStyle = beam.birth ? '#ebd6a5' : '#9cb1b2';
+    ctx.strokeStyle = beam.birth ? '#ebd6a5' : '#e6eeee';
     ctx.fillStyle = ctx.strokeStyle;
     ctx.lineWidth = 1;
     if (beam.drawTrail) {
@@ -159,6 +179,28 @@ export class OrbitRenderer {
     ctx.globalAlpha = 1;
   }
 
+  paintContinuation(system, outer, enabled) {
+    const beam = continuationStyle(system, outer, enabled);
+    if (!beam) return;
+    const ctx = this.ctx;
+    ctx.globalAlpha = beam.opacity;
+    ctx.strokeStyle = '#809d9b';
+    ctx.fillStyle = '#809d9b';
+    ctx.lineWidth = .8;
+    if (beam.drawTrail) {
+      ctx.beginPath();
+      ctx.moveTo(beam.startX, beam.startY);
+      ctx.lineTo(beam.endX, beam.endY);
+      ctx.stroke();
+    }
+    if (beam.impact) {
+      ctx.beginPath();
+      ctx.arc(beam.endX, beam.endY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   paintRings(system, outer, dotSize, showNonPrimes) {
     const ctx = this.ringCtx;
     ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
@@ -170,7 +212,7 @@ export class OrbitRenderer {
       ctx.strokeStyle = 'rgba(128,157,155,.12)';
       // Merge rings that occupy the same physical pixel at dense scales.
       let lastPixel = -1;
-      for (const number of nonPrimes(system.time, system.primes)) {
+      for (const number of nonPrimes(Math.floor(system.time), system.primes)) {
         const r = radius(number, system.time, outer);
         const pixel = Math.round(r * this.pixelRatio);
         if (pixel === lastPixel) continue;

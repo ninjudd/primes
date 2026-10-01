@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { OrbitSystem, radius, phase } from '../model.js';
-import { beamStyle } from '../renderer.js';
+import { beamStyle, continuationStyle } from '../renderer.js';
 
 test('beam hits the first prime divisor or the newly born prime', () => {
   const system = new OrbitSystem();
@@ -99,4 +99,31 @@ test('beam tip arrives slightly early without creating a premature prime', async
   assert.equal(system.time, 7);
   assert.ok(system.primes.includes(7));
   assert.equal(beamStyle(system, 300).impact, true);
+});
+
+
+test('N fires synchronized beams without delaying the gray orbit', async () => {
+  const system = new OrbitSystem();
+  await system.seek(8.75);
+  const white = beamStyle(system, 300);
+  const gray = continuationStyle(system, 300, true);
+  assert.equal(gray.impact, false);
+  assert.ok(-gray.endY > white.end);
+  assert.ok(Math.abs((-gray.endY) / radius(9, system.time, 300) - white.progress) < 1e-12);
+  assert.equal(continuationStyle(system, 300, false), null);
+  await system.seek(8.95);
+  assert.equal(continuationStyle(system, 300, true).endY, -radius(9, system.time, 300));
+  system.advance(.06);
+  assert.equal(system.time, 9);
+  const arrival = continuationStyle(system, 300, true);
+  assert.equal(arrival.impact, true);
+  assert.equal(arrival.endY, -radius(9, 9, 300));
+  system.advance(.05);
+  const after = continuationStyle(system, 300, true);
+  const r = radius(9, system.time, 300);
+  const angle = phase(9, system.time) - Math.PI / 2;
+  assert.equal(after.endX, Math.cos(angle) * r);
+  assert.equal(after.drawTrail, false);
+  await system.seek(11);
+  assert.equal(continuationStyle(system, 300, true), null);
 });
