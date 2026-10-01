@@ -52,3 +52,21 @@ test('shared links include the non-prime option only when selected', () => {
   assert.equal(momentURL(11.5, true), 'https://ninjudd.com/primes?nonprimes=1#11.5');
   assert.equal(momentURL(11.5, false), 'https://ninjudd.com/primes#11.5');
 });
+
+test('compact version links retain time, mode and display options', async () => {
+  const { momentDivisions } = await import('../sharing.js');
+  for (const divisions of [1, 2, 4]) {
+    const time = 30.125;
+    const url = new URL(momentURL(time, true, divisions, false));
+    assert.equal(parseMoment(url.hash), time);
+    assert.equal(momentDivisions(url.hash), divisions);
+    assert.equal(url.searchParams.get('rings'), '0');
+    assert.equal(url.searchParams.get('nonprimes'), '1');
+    assert.equal(url.searchParams.has('experiment'), false);
+  }
+  assert.equal(momentURL(30, false, 2), 'https://ninjudd.com/primes#30/2');
+  assert.equal(momentURL(30, false, 4), 'https://ninjudd.com/primes#30/4');
+  assert.equal(momentDivisions('#30', '?experiment=quarter'), 4);
+  assert.equal(momentDivisions('#30/2', '?experiment=quarter'), 2);
+  for (const hash of ['#30/3', '#30/', '#30/4/2']) assert.equal(parseMoment(hash), null);
+});

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { OrbitSystem } from '../model.js';
-import { parseMoment, momentURL } from '../sharing.js';
+import { parseMoment, momentURL, momentHash, momentDivisions } from '../sharing.js';
 
 test('pause, share and hidden tabs stop scheduling; reset and resume keep one loop', async () => {
   const queue = new Map();
@@ -20,7 +20,7 @@ test('pause, share and hidden tabs stop scheduling; reset and resume keep one lo
   const media = { ...element(), matches: false };
   let copied;
   const context = {
-    parseMoment, momentURL, AbortController, URLSearchParams, URL,
+    parseMoment, momentURL, momentHash, momentDivisions, AbortController, URLSearchParams, URL,
     location: { hash: '', pathname: '/primes/', search: '' },
     history: { replaceState() {} },
     navigator: { clipboard: { async writeText(url) { copied = url; } } },

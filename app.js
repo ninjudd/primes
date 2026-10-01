@@ -1,4 +1,4 @@
-import { parseMoment, momentURL } from './sharing.js?v=quarter';
+import { parseMoment, momentURL, momentHash, momentDivisions } from './sharing.js?v=hash-version';
 import { AlternatingSystem } from './alternating.js?v=quarter';
 import { OrbitSystem } from './model.js?v=beam';
 import { OrbitRenderer } from './renderer.js?v=scaled-dots';
@@ -33,8 +33,7 @@ const primeToggle = document.querySelector('#primes-only');
 const nonPrimeToggle = document.querySelector('#non-primes');
 nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
 primeToggle.checked = !nonPrimeToggle.checked;
-const experiment = new URLSearchParams(location.search).get('experiment');
-const divisions = experiment === 'quarter' ? 4 : experiment === 'alternating' ? 2 : 1;
+const divisions = momentDivisions(location.hash, location.search);
 const alternating = divisions !== 1;
 const system = alternating
   ? new AlternatingSystem(divisions) : new OrbitSystem();
@@ -55,11 +54,10 @@ halfVersion.checked = divisions === 2;
 quarterVersion.checked = divisions === 4;
 function changeVersion() {
   const url = new URL(location.href);
-  if (quarterVersion.checked) url.searchParams.set('experiment', 'quarter');
-  else if (halfVersion.checked) url.searchParams.set('experiment', 'alternating');
-  else url.searchParams.delete('experiment');
+  url.searchParams.delete('experiment');
+  const nextDivisions = quarterVersion.checked ? 4 : halfVersion.checked ? 2 : 1;
   // Restore this exact moment in the other system, paused for comparison.
-  url.hash = String((halfVersion.checked || quarterVersion.checked) ? Math.max(halfVersion.checked ? 1.5 : 1.25, Math.min(system.time, 100000)) : Math.max(2, system.time));
+  url.hash = momentHash(nextDivisions > 1 ? Math.max(1 + 1 / nextDivisions, Math.min(system.time, 100000)) : Math.max(2, system.time), nextDivisions);
   location.assign(url.href);
 }
 integerVersion.addEventListener('change', changeVersion);
@@ -115,8 +113,8 @@ reset.addEventListener('click', () => {
   play.disabled = share.disabled = false;
   status.textContent = '';
   fallback.hidden = true;
-  history.replaceState(null, '', location.pathname + location.search);
   system.reset();
+  history.replaceState(null, '', location.pathname + location.search + (alternating ? momentHash(system.time, divisions) : ''));
   previous = null;
   draw();
 });
@@ -129,16 +127,13 @@ speed.addEventListener('input', () => {
 speed.dispatchEvent(new Event('input'));
 share.addEventListener('click', async () => {
   // Capture before any asynchronous work; keep this exact frame visible.
-  const shared = new URL(alternating ? location.href : momentURL(system.time, nonPrimeToggle.checked));
-  if (!showRings) shared.searchParams.set('rings', '0');
-  shared.hash = String(system.time);
-  const url = shared.href;
+  const url = momentURL(system.time, nonPrimeToggle.checked, divisions, showRings);
   running = false;
   syncPlay();
   share.disabled = true;
   status.textContent = '';
   fallback.hidden = true;
-  history.replaceState(null, '', location.pathname + location.search + `#${system.time}`);
+  history.replaceState(null, '', location.pathname + location.search + momentHash(system.time, divisions));
   try {
     if (navigator.share) {
       await navigator.share({ title: 'Prime Orbits', url });
@@ -161,6 +156,10 @@ share.addEventListener('click', async () => {
 });
 
 async function loadMoment() {
+  if (momentDivisions(location.hash, location.search) !== divisions) {
+    location.reload();
+    return;
+  }
   loading?.abort();
   loading = null;
   const time = parseMoment(location.hash, alternating ? 1 + 1 / divisions : 2);
