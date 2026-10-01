@@ -16,12 +16,34 @@ export function densityStyle(time, outer) {
 
 export function beamStyle(system, outer) {
   if (!system.beam) return null;
-  const age = system.time - system.beam.number;
-  if (age < 0 || age >= .45) return null;
+  const fraction = system.time - Math.floor(system.time);
+  const lead = .35;
+  const afterglow = .15;
+  let event;
+  let progress;
+  let opacity;
+  let impact = false;
+  if (fraction >= 1 - lead) {
+    // Predict only the destination. Prime creation still occurs at the tick.
+    event = system.eventAt(Math.floor(system.time) + 1);
+    progress = (fraction - (1 - lead)) / lead;
+    opacity = .7 * Math.min(1, progress / .15);
+  } else if (fraction < afterglow) {
+    event = system.beam;
+    progress = 1;
+    opacity = .7 * (1 - fraction / afterglow) ** 2;
+    impact = true;
+  } else {
+    return null;
+  }
+  const length = radius(event.blocker ?? event.number, system.time, outer);
   return {
-    length: radius(system.beam.blocker ?? system.beam.number, system.time, outer),
-    opacity: .7 * (1 - age / .45) ** 2,
-    birth: system.beam.blocker === null,
+    length,
+    start: length * Math.max(0, progress - .22),
+    end: length * progress,
+    opacity,
+    impact,
+    birth: event.blocker === null,
   };
 }
 
@@ -112,13 +134,14 @@ export class OrbitRenderer {
     ctx.fillStyle = ctx.strokeStyle;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, -beam.length);
+    ctx.moveTo(0, -beam.start);
+    ctx.lineTo(0, -beam.end);
     ctx.stroke();
-    // A small impact point stays on the zero ray as the pulse fades.
-    ctx.beginPath();
-    ctx.arc(0, -beam.length, beam.birth ? 4 : 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    if (beam.impact) {
+      ctx.beginPath();
+      ctx.arc(0, -beam.length, beam.birth ? 4 : 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.globalAlpha = 1;
   }
 
