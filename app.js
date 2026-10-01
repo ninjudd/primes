@@ -1,7 +1,7 @@
 import { parseMoment, momentURL } from './sharing.js?v=quarter';
 import { AlternatingSystem } from './alternating.js?v=quarter';
 import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=hide-rings';
+import { OrbitRenderer } from './renderer.js?v=scaled-dots';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);

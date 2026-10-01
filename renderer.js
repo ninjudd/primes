@@ -129,16 +129,18 @@ export class OrbitRenderer {
     if (!width || !height) return;
     const outer = Math.max(0, Math.min(width, height) / 2 - 24);
     const style = densityStyle(system.time, outer);
-    const { dotSize } = style;
+    const dotScale = 1 / (system.divisions || 1);
+    const dotSize = style.dotSize * dotScale;
+    const glow = style.glow * dotScale;
     let scale = (this.ringTime + 4) / (system.time + 4);
     if (showRings && (this.count !== system.primes.length || this.showNonPrimes !== showNonPrimes ||
         (showNonPrimes && this.integerTime !== (Math.floor(system.time * (system.divisions || 1)))) || scale < .98 || scale > 1)) {
       this.paintRings(system, outer, dotSize, showNonPrimes);
       scale = 1;
     }
-    const spriteKey = `${dotSize}:${style.glow}:${pixelRatio}`;
+    const spriteKey = `${dotSize}:${glow}:${pixelRatio}`;
     if (spriteKey !== this.spriteKey) {
-      this.paintSprite(dotSize, style.glow);
+      this.paintSprite(dotSize, glow);
       this.spriteKey = spriteKey;
     }
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
@@ -190,7 +192,7 @@ export class OrbitRenderer {
     }
     if (beam.impact) {
       ctx.beginPath();
-      ctx.arc(beam.impactX, beam.impactY, beam.birth ? 4 : 2.5, 0, Math.PI * 2);
+      ctx.arc(beam.impactX, beam.impactY, (beam.birth ? 4 : 2.5) / (system.divisions || 1), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -212,7 +214,7 @@ export class OrbitRenderer {
     }
     if (beam.impact) {
       ctx.beginPath();
-      ctx.arc(beam.endX, beam.endY, 2.5, 0, Math.PI * 2);
+      ctx.arc(beam.endX, beam.endY, 2.5 / (system.divisions || 1), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
