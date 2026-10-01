@@ -17,7 +17,7 @@ export function densityStyle(time, outer) {
 export function beamStyle(system, outer) {
   if (!system.beam) return null;
   const fraction = system.time - Math.floor(system.time);
-  const lead = .35;
+  const lead = .5;
   const afterglow = .15;
   let event;
   let progress;
@@ -37,7 +37,11 @@ export function beamStyle(system, outer) {
     return null;
   }
   const length = radius(event.blocker ?? event.number, system.time, outer);
+  const angle = phase(event.blocker ?? event.number, system.time) - Math.PI / 2;
   return {
+    impactX: Math.cos(angle) * length,
+    impactY: Math.sin(angle) * length,
+    drawTrail: !impact || fraction === 0,
     length,
     start: length * Math.max(0, progress - .22),
     end: length * progress,
@@ -138,13 +142,15 @@ export class OrbitRenderer {
     ctx.strokeStyle = beam.birth ? '#ebd6a5' : '#9cb1b2';
     ctx.fillStyle = ctx.strokeStyle;
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, -beam.start);
-    ctx.lineTo(0, -beam.end);
-    ctx.stroke();
+    if (beam.drawTrail) {
+      ctx.beginPath();
+      ctx.moveTo(0, -beam.start);
+      ctx.lineTo(0, -beam.end);
+      ctx.stroke();
+    }
     if (beam.impact) {
       ctx.beginPath();
-      ctx.arc(0, -beam.length, beam.birth ? 4 : 2.5, 0, Math.PI * 2);
+      ctx.arc(beam.impactX, beam.impactY, beam.birth ? 4 : 2.5, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;

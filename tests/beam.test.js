@@ -65,3 +65,22 @@ test('beam travels early but arrives and creates the orbit only at the tick', as
     if (blocker === null) assert.ok(system.primes.includes(number));
   }
 });
+
+
+test('earlier launch meets zero and the impact follows the departing dot', async () => {
+  const system = new OrbitSystem();
+  await system.seek(8.55);
+  assert.ok(beamStyle(system, 300).end > 0);
+  assert.equal(beamStyle(system, 300).impact, false);
+  await system.seek(9);
+  const hit = beamStyle(system, 300);
+  assert.ok(Math.abs(hit.impactX) < 1e-12);
+  assert.equal(hit.impactY, -hit.length);
+  assert.equal(hit.drawTrail, true);
+  system.advance(.05);
+  const after = beamStyle(system, 300);
+  const angle = phase(3, system.time) - Math.PI / 2;
+  assert.equal(after.impactX, Math.cos(angle) * after.length);
+  assert.equal(after.impactY, Math.sin(angle) * after.length);
+  assert.equal(after.drawTrail, false);
+});
