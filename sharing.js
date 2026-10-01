@@ -1,8 +1,8 @@
-export function parseMoment(hash) {
+export function parseMoment(hash, minimum = 2) {
   const value = hash.replace(/^#/, '');
   if (!/^(?:\d+(?:\.\d+)?)(?:e[+-]?\d+)?$/i.test(value)) return null;
   const time = Number(value);
-  return Number.isFinite(time) && time >= 2 && time <= Number.MAX_SAFE_INTEGER - 1024 ? time : null;
+  return Number.isFinite(time) && time >= minimum && time <= Number.MAX_SAFE_INTEGER - 1024 ? time : null;
 }
 
 export function momentURL(time, showNonPrimes = false) {

@@ -5,6 +5,9 @@ export class AlternatingSystem extends OrbitSystem {
   reset() {
     super.reset();
     this.alternating = true;
+    this.time = 1.5;
+    this.primes = [1.5];
+    this.beam = { number: 1.5, blocker: null };
   }
 
   eventAt(number) {
@@ -34,8 +37,8 @@ export class AlternatingSystem extends OrbitSystem {
   }
 
   async seek(time, { signal, yieldControl = () => new Promise(resolve => setTimeout(resolve, 0)) } = {}) {
-    if (!Number.isFinite(time) || time < 2 || time > 100000) {
-      throw new RangeError('Alternating preview supports times from 2 to 100000');
+    if (!Number.isFinite(time) || time < 1.5 || time > 100000) {
+      throw new RangeError('Alternating preview supports times from 1.5 to 100000');
     }
     const target = new AlternatingSystem();
     let count = 0;

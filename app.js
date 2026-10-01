@@ -1,5 +1,5 @@
-import { parseMoment, momentURL } from './sharing.js?v=nonprimes';
-import { AlternatingSystem } from './alternating.js';
+import { parseMoment, momentURL } from './sharing.js?v=down-first';
+import { AlternatingSystem } from './alternating.js?v=down-first';
 import { OrbitSystem } from './model.js?v=beam';
 import { OrbitRenderer } from './renderer.js?v=alternating';
 
@@ -21,7 +21,7 @@ const system = alternating
   ? new AlternatingSystem() : new OrbitSystem();
 if (alternating) {
   canvas.setAttribute('aria-label', 'Alternating orbits. Integer shots fire upward; half-integer shots fire downward. Gold dots are unblocked births; gray dots show blocked candidates.');
-  for (const [input, text, name] of [[primeToggle, '𝔹', 'Unblocked births'], [nonPrimeToggle, '𝔸', 'All candidates']]) {
+  for (const [input, text, name] of [[primeToggle, 'ℙ', 'Unblocked births'], [nonPrimeToggle, 'ℕ', 'All candidates']]) {
     input.setAttribute('aria-label', name);
     const label = document.querySelector(`label[for="${input.id}"]`);
     label.textContent = text;
@@ -37,7 +37,7 @@ function changeVersion() {
   if (halfVersion.checked) url.searchParams.set('experiment', 'alternating');
   else url.searchParams.delete('experiment');
   // Restore this exact moment in the other system, paused for comparison.
-  url.hash = String(halfVersion.checked ? Math.min(system.time, 100000) : system.time);
+  url.hash = String(halfVersion.checked ? Math.min(system.time, 100000) : Math.max(2, system.time));
   location.assign(url.href);
 }
 integerVersion.addEventListener('change', changeVersion);
@@ -139,7 +139,7 @@ share.addEventListener('click', async () => {
 async function loadMoment() {
   loading?.abort();
   loading = null;
-  const time = parseMoment(location.hash);
+  const time = parseMoment(location.hash, alternating ? 1.5 : 2);
   if (alternating && time > 100000) {
     status.textContent = 'Experiment supports start numbers up to 100000';
     return;
