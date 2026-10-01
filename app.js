@@ -1,7 +1,7 @@
-import { parseMoment, momentURL } from './sharing.js?v=down-first';
-import { AlternatingSystem } from './alternating.js?v=down-first';
+import { parseMoment, momentURL } from './sharing.js?v=quarter';
+import { AlternatingSystem } from './alternating.js?v=quarter';
 import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=alternating';
+import { OrbitRenderer } from './renderer.js?v=quarter';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
@@ -16,11 +16,13 @@ const primeToggle = document.querySelector('#primes-only');
 const nonPrimeToggle = document.querySelector('#non-primes');
 nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
 primeToggle.checked = !nonPrimeToggle.checked;
-const alternating = new URLSearchParams(location.search).get('experiment') === 'alternating';
+const experiment = new URLSearchParams(location.search).get('experiment');
+const divisions = experiment === 'quarter' ? 4 : experiment === 'alternating' ? 2 : 1;
+const alternating = divisions !== 1;
 const system = alternating
-  ? new AlternatingSystem() : new OrbitSystem();
+  ? new AlternatingSystem(divisions) : new OrbitSystem();
 if (alternating) {
-  canvas.setAttribute('aria-label', 'Alternating orbits. Integer shots fire upward; half-integer shots fire downward. Gold dots are unblocked births; gray dots show blocked candidates.');
+  canvas.setAttribute('aria-label', 'Alternating orbits. Shots rotate clockwise through the selected directions. Gold dots are unblocked births; gray dots show blocked candidates.');
   for (const [input, text, name] of [[primeToggle, 'ℙ', 'Unblocked births'], [nonPrimeToggle, 'ℕ', 'All candidates']]) {
     input.setAttribute('aria-label', name);
     const label = document.querySelector(`label[for="${input.id}"]`);
@@ -30,18 +32,22 @@ if (alternating) {
 }
 const integerVersion = document.querySelector('#integer-version');
 const halfVersion = document.querySelector('#half-version');
-integerVersion.checked = !alternating;
-halfVersion.checked = alternating;
+const quarterVersion = document.querySelector('#quarter-version');
+integerVersion.checked = divisions === 1;
+halfVersion.checked = divisions === 2;
+quarterVersion.checked = divisions === 4;
 function changeVersion() {
   const url = new URL(location.href);
-  if (halfVersion.checked) url.searchParams.set('experiment', 'alternating');
+  if (quarterVersion.checked) url.searchParams.set('experiment', 'quarter');
+  else if (halfVersion.checked) url.searchParams.set('experiment', 'alternating');
   else url.searchParams.delete('experiment');
   // Restore this exact moment in the other system, paused for comparison.
-  url.hash = String(halfVersion.checked ? Math.min(system.time, 100000) : Math.max(2, system.time));
+  url.hash = String((halfVersion.checked || quarterVersion.checked) ? Math.max(halfVersion.checked ? 1.5 : 1.25, Math.min(system.time, 100000)) : Math.max(2, system.time));
   location.assign(url.href);
 }
 integerVersion.addEventListener('change', changeVersion);
 halfVersion.addEventListener('change', changeVersion);
+quarterVersion.addEventListener('change', changeVersion);
 let loading = null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let running = !reducedMotion.matches;
@@ -139,7 +145,7 @@ share.addEventListener('click', async () => {
 async function loadMoment() {
   loading?.abort();
   loading = null;
-  const time = parseMoment(location.hash, alternating ? 1.5 : 2);
+  const time = parseMoment(location.hash, alternating ? 1 + 1 / divisions : 2);
   if (alternating && time > 100000) {
     status.textContent = 'Experiment supports start numbers up to 100000';
     return;

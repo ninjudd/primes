@@ -1,7 +1,7 @@
 import { phase, radius, capacity } from './model.js?v=beam';
 
 function orbitPhase(value, system) {
-  return phase(value, system.time) + (system.alternating && value % 1 ? Math.PI : 0);
+  return phase(value, system.time) + (system.alternating ? (value % 1) * Math.PI * 2 : 0);
 }
 
 // Use continuous estimated spacing rather than the discrete number of primes.
@@ -24,12 +24,12 @@ function primeRingColor(index) {
 
 export function beamStyle(system, outer) {
   if (!system.beam) return null;
-  const step = system.alternating ? .5 : 1;
+  const step = 1 / (system.divisions || 1);
   const tick = Math.floor(system.time / step) * step;
   const fraction = system.time - tick;
-  const lead = system.alternating ? .25 : .5;
+  const lead = step / 2;
   const arrivalLead = .06;
-  const afterglow = .15;
+  const afterglow = Math.min(.15, step / 2);
   let event;
   let progress;
   let opacity;
@@ -52,6 +52,8 @@ export function beamStyle(system, outer) {
   const length = radius(event.blocker ?? event.number, system.time, outer);
   const angle = orbitPhase(event.blocker ?? event.number, system) - Math.PI / 2;
   return {
+    rayX: Math.sin(system.alternating ? (event.number % 1) * Math.PI * 2 : 0),
+    rayY: -Math.cos(system.alternating ? (event.number % 1) * Math.PI * 2 : 0),
     direction: system.alternating && event.number % 1 ? -1 : 1,
     number: event.number,
     blocker: event.blocker,
@@ -74,9 +76,10 @@ export function continuationStyle(system, outer, enabled) {
   const length = radius(primary.number, system.time, outer);
   const angle = orbitPhase(primary.number, system) - Math.PI / 2;
   return {
-    startX: 0, startY: -primary.direction * length * Math.max(0, primary.progress - .22),
-    endX: primary.impact ? Math.cos(angle) * length : 0,
-    endY: primary.impact ? Math.sin(angle) * length : -primary.direction * length * primary.progress,
+    startX: primary.rayX * length * Math.max(0, primary.progress - .22),
+    startY: primary.rayY * length * Math.max(0, primary.progress - .22),
+    endX: primary.impact ? Math.cos(angle) * length : primary.rayX * length * primary.progress,
+    endY: primary.impact ? Math.sin(angle) * length : primary.rayY * length * primary.progress,
     impact: primary.impact,
     opacity: primary.opacity / .7 * .12 * Math.min(
       densityStyle(system.time, outer).ringOpacity, outer / (system.time + 4) / .8),
@@ -129,7 +132,7 @@ export class OrbitRenderer {
     const { dotSize } = style;
     let scale = (this.ringTime + 4) / (system.time + 4);
     if (this.count !== system.primes.length || this.showNonPrimes !== showNonPrimes ||
-        (showNonPrimes && this.integerTime !== (Math.floor(system.time * (system.alternating ? 2 : 1)))) || scale < .98 || scale > 1) {
+        (showNonPrimes && this.integerTime !== (Math.floor(system.time * (system.divisions || 1)))) || scale < .98 || scale > 1) {
       this.paintRings(system, outer, dotSize, showNonPrimes);
       scale = 1;
     }
@@ -146,7 +149,7 @@ export class OrbitRenderer {
     if (showNonPrimes) {
       // Extra dots have no glow and are drawn underneath the prime dots.
       ctx.globalAlpha = .22 * Math.min(style.dotOpacity, Math.sqrt(outer / (system.time + 4) / .3));
-      for (const number of nonPrimes(system.time, system.primes, system.alternating ? .5 : 1)) {
+      for (const number of nonPrimes(system.time, system.primes, 1 / (system.divisions || 1))) {
         const r = radius(number, system.time, outer);
         const angle = orbitPhase(number, system) - Math.PI / 2;
         ctx.drawImage(this.dimSprite, Math.cos(angle) * r - 4, Math.sin(angle) * r - 4, 8, 8);
@@ -181,8 +184,8 @@ export class OrbitRenderer {
     ctx.lineWidth = .8;
     if (beam.drawTrail) {
       ctx.beginPath();
-      ctx.moveTo(0, -beam.direction * beam.start);
-      ctx.lineTo(0, -beam.direction * beam.end);
+      ctx.moveTo(beam.rayX * beam.start, beam.rayY * beam.start);
+      ctx.lineTo(beam.rayX * beam.end, beam.rayY * beam.end);
       ctx.stroke();
     }
     if (beam.impact) {
@@ -226,7 +229,7 @@ export class OrbitRenderer {
       ctx.strokeStyle = 'rgba(128,157,155,.12)';
       // Merge rings that occupy the same physical pixel at dense scales.
       let lastPixel = -1;
-      for (const number of nonPrimes(system.time, system.primes, system.alternating ? .5 : 1)) {
+      for (const number of nonPrimes(system.time, system.primes, 1 / (system.divisions || 1))) {
         const r = radius(number, system.time, outer);
         const pixel = Math.round(r * this.pixelRatio);
         if (pixel === lastPixel) continue;
@@ -243,11 +246,12 @@ export class OrbitRenderer {
       ctx.strokeStyle = primeRingColor(index);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(0, system.alternating && prime % 1 ? r : -r, Math.min(1.3, dotSize * .45), 0, Math.PI * 2);
+      const origin = system.alternating ? (prime % 1) * Math.PI * 2 : 0;
+      ctx.arc(Math.sin(origin) * r, -Math.cos(origin) * r, Math.min(1.3, dotSize * .45), 0, Math.PI * 2);
       ctx.fill();
     });
     this.showNonPrimes = showNonPrimes;
-    this.integerTime = (Math.floor(system.time * (system.alternating ? 2 : 1)));
+    this.integerTime = (Math.floor(system.time * (system.divisions || 1)));
     this.count = system.primes.length;
     this.ringTime = system.time;
   }

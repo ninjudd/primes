@@ -50,3 +50,31 @@ test('half-step shared starts restore the first downward birth', async () => {
   assert.deepEqual(system.beam, { number: 1.5, blocker: null });
   assert.deepEqual(system.primes, [1.5]);
 });
+
+test('quarter shots visit all four directions and collision tests match geometry', async () => {
+  const system = new AlternatingSystem(4);
+  const directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+  for (const [x, y] of directions) {
+    const beam = beamStyle(system, 300);
+    assert.ok(Math.abs(beam.rayX - x) < 1e-10);
+    assert.ok(Math.abs(beam.rayY - y) < 1e-10);
+    system.advance(.25);
+  }
+  for (let number = system.time; number <= 50; number += .25) {
+    const rayAngle = (number % 1) * 2 * Math.PI;
+    const expected = system.primes.find(value => {
+      if (value >= number) return false;
+      const angle = 2 * Math.PI * ((number - value) / value + value % 1);
+      return Math.abs(Math.sin(angle) - Math.sin(rayAngle)) < 1e-10 &&
+        Math.abs(Math.cos(angle) - Math.cos(rayAngle)) < 1e-10;
+    }) ?? null;
+    assert.equal(system.eventAt(number).blocker, expected);
+    system.advance(.25);
+  }
+  const restored = new AlternatingSystem(4);
+  await restored.seek(system.time);
+  assert.deepEqual(restored.primes, system.primes);
+  restored.reset();
+  assert.equal(restored.time, 1.25);
+  assert.equal(restored.divisions, 4);
+});
