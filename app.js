@@ -1,6 +1,7 @@
 import { parseMoment, momentURL } from './sharing.js?v=nonprimes';
+import { AlternatingSystem } from './alternating.js';
 import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=ring-beams';
+import { OrbitRenderer } from './renderer.js?v=alternating';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
@@ -15,7 +16,19 @@ const primeToggle = document.querySelector('#primes-only');
 const nonPrimeToggle = document.querySelector('#non-primes');
 nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
 primeToggle.checked = !nonPrimeToggle.checked;
-const system = new OrbitSystem();
+const alternating = new URLSearchParams(location.search).get('experiment') === 'alternating';
+const system = alternating
+  ? new AlternatingSystem() : new OrbitSystem();
+if (alternating) {
+  document.querySelector('.number-set').classList.add('experiment');
+  canvas.setAttribute('aria-label', 'Alternating orbits. Integer shots fire upward; half-integer shots fire downward. Gold dots are unblocked births; gray dots show blocked candidates.');
+  for (const [input, text, name] of [[primeToggle, 'Born', 'Unblocked births'], [nonPrimeToggle, 'All', 'All candidates']]) {
+    input.setAttribute('aria-label', name);
+    const label = document.querySelector(`label[for="${input.id}"]`);
+    label.textContent = text;
+    label.title = name;
+  }
+}
 let loading = null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let running = !reducedMotion.matches;
@@ -80,7 +93,9 @@ speed.addEventListener('input', () => {
 speed.dispatchEvent(new Event('input'));
 share.addEventListener('click', async () => {
   // Capture before any asynchronous work; keep this exact frame visible.
-  const url = momentURL(system.time, nonPrimeToggle.checked);
+  const shared = new URL(alternating ? location.href : momentURL(system.time, nonPrimeToggle.checked));
+  shared.hash = String(system.time);
+  const url = shared.href;
   running = false;
   syncPlay();
   share.disabled = true;
@@ -112,6 +127,10 @@ async function loadMoment() {
   loading?.abort();
   loading = null;
   const time = parseMoment(location.hash);
+  if (alternating && time > 100000) {
+    status.textContent = 'Experiment supports start numbers up to 100000';
+    return;
+  }
   if (time === null) {
     play.disabled = share.disabled = false;
     status.textContent = location.hash ? 'Invalid start number' : '';

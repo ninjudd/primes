@@ -32,3 +32,5 @@ button:disabled { opacity: .4; cursor: default; }
 .number-set input:checked + label { background: #26363b; color: #ebd6a5; }
 .number-set input:focus-visible + label { outline: 2px solid #eddaa9; outline-offset: 2px; }
 @media (max-height: 420px) { .number-set { bottom: 74px; } }
+
+.number-set.experiment label { width: 58px; font-family: inherit; font-size: 13px; }

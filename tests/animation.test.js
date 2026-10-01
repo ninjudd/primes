@@ -20,7 +20,7 @@ test('pause, share and hidden tabs stop scheduling; reset and resume keep one lo
   const media = { ...element(), matches: false };
   let copied;
   const context = {
-    parseMoment, momentURL, AbortController, URLSearchParams,
+    parseMoment, momentURL, AbortController, URLSearchParams, URL,
     location: { hash: '', pathname: '/primes/', search: '' },
     history: { replaceState() {} },
     navigator: { clipboard: { async writeText(url) { copied = url; } } },
