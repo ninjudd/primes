@@ -14,6 +14,10 @@ export function densityStyle(time, outer) {
   };
 }
 
+function primeRingColor(index) {
+  return `hsla(${165 + 38 * Math.sin(index * .37)}, 25%, 60%, .3)`;
+}
+
 export function beamStyle(system, outer) {
   if (!system.beam) return null;
   const fraction = system.time - Math.floor(system.time);
@@ -149,7 +153,7 @@ export class OrbitRenderer {
     }
     ctx.globalAlpha = 1;
     this.paintContinuation(system, outer, showNonPrimes);
-    this.paintBeam(system, outer);
+    this.paintBeam(system, outer, showNonPrimes);
     // Zero remains visible between shots as the source of the beam.
     ctx.beginPath();
     ctx.arc(0, 0, dotSize, 0, Math.PI * 2);
@@ -157,14 +161,17 @@ export class OrbitRenderer {
     ctx.fill();
   }
 
-  paintBeam(system, outer) {
+  paintBeam(system, outer, showNonPrimes) {
     const beam = beamStyle(system, outer);
     if (!beam) return;
     const ctx = this.ctx;
-    ctx.globalAlpha = beam.opacity;
-    ctx.strokeStyle = beam.birth ? '#ebd6a5' : '#e6eeee';
+    const ringOpacity = densityStyle(system.time, outer).ringOpacity;
+    ctx.globalAlpha = beam.opacity / .7 * (showNonPrimes
+      ? Math.min(ringOpacity, outer / (system.time + 4) / .8) : ringOpacity);
+    const targetIndex = system.primes.indexOf(beam.blocker ?? beam.number);
+    ctx.strokeStyle = primeRingColor(targetIndex < 0 ? system.primes.length : targetIndex);
     ctx.fillStyle = ctx.strokeStyle;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = .8;
     if (beam.drawTrail) {
       ctx.beginPath();
       ctx.moveTo(0, -beam.start);
@@ -226,7 +233,7 @@ export class OrbitRenderer {
       const r = radius(prime, system.time, outer);
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.strokeStyle = `hsla(${165 + 38 * Math.sin(index * .37)}, 25%, 60%, .3)`;
+      ctx.strokeStyle = primeRingColor(index);
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(0, -r, Math.min(1.3, dotSize * .45), 0, Math.PI * 2);

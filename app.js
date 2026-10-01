@@ -1,6 +1,6 @@
 import { parseMoment, momentURL } from './sharing.js?v=nonprimes';
 import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=dim-dual-beam';
+import { OrbitRenderer } from './renderer.js?v=ring-beams';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
