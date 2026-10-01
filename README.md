@@ -110,3 +110,9 @@ During the final 0.5 simulation units before each integer count, a short beam tr
 Only prime dots block the beam in both ℙ and ℕ modes. Optional non-prime dots, including 1, are display context. Pausing freezes the pulse, and shared times restore its exact state. At very high speeds or low frame rates, the clock can lag while it presents every integer event; no count is skipped.
 
 In ℕ mode, composite counts launch two synchronized beams from the center: the prime-colored beam stops at the blocking prime and a dim gray beam travels to the new number's orbit. Both use the same launch and arrival timing; the gray ring and dot appear at the integer count with no reveal delay. Each impact follows its own dot afterward. ℙ mode has only the prime beam, and prime births use a single prime-colored beam in either mode.
+
+## Alternating-beam experiment
+
+Open `?experiment=alternating` for an opt-in experiment. It starts with a downward birth at 1.5, fires upward at integer counts and downward at half-integers. Half-integer circles (1.5, 2.5, 3.5, …) begin at the bottom, with period and radius proportional to their value. Existing gold dots can block either ray when aligned; for example, 1.5 blocks the downward shot at 4.5. The 1 / ½ toggle switches versions at the current moment, paused for comparison (clamped to 100000 when entering the experiment, and to a minimum of 2 when returning to the original). Both versions retain ℙ / ℕ. In the ½ version, ℙ shows unblocked births and ℕ adds gray circles for blocked candidates. These sets are not the usual primes and natural numbers. The original view is unchanged without the parameter.
+
+Shots retain the early-arrival treatment, now within half-count intervals. Shared experiment links retain the experiment parameter and current host. Seeking is limited to 100000 in this preview; reconstruction yields periodically and can be cancelled.

@@ -1,6 +1,7 @@
-import { parseMoment, momentURL } from './sharing.js?v=nonprimes';
+import { parseMoment, momentURL } from './sharing.js?v=down-first';
+import { AlternatingSystem } from './alternating.js?v=down-first';
 import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=ring-beams';
+import { OrbitRenderer } from './renderer.js?v=alternating';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
@@ -15,7 +16,32 @@ const primeToggle = document.querySelector('#primes-only');
 const nonPrimeToggle = document.querySelector('#non-primes');
 nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
 primeToggle.checked = !nonPrimeToggle.checked;
-const system = new OrbitSystem();
+const alternating = new URLSearchParams(location.search).get('experiment') === 'alternating';
+const system = alternating
+  ? new AlternatingSystem() : new OrbitSystem();
+if (alternating) {
+  canvas.setAttribute('aria-label', 'Alternating orbits. Integer shots fire upward; half-integer shots fire downward. Gold dots are unblocked births; gray dots show blocked candidates.');
+  for (const [input, text, name] of [[primeToggle, 'ℙ', 'Unblocked births'], [nonPrimeToggle, 'ℕ', 'All candidates']]) {
+    input.setAttribute('aria-label', name);
+    const label = document.querySelector(`label[for="${input.id}"]`);
+    label.textContent = text;
+    label.title = name;
+  }
+}
+const integerVersion = document.querySelector('#integer-version');
+const halfVersion = document.querySelector('#half-version');
+integerVersion.checked = !alternating;
+halfVersion.checked = alternating;
+function changeVersion() {
+  const url = new URL(location.href);
+  if (halfVersion.checked) url.searchParams.set('experiment', 'alternating');
+  else url.searchParams.delete('experiment');
+  // Restore this exact moment in the other system, paused for comparison.
+  url.hash = String(halfVersion.checked ? Math.min(system.time, 100000) : Math.max(2, system.time));
+  location.assign(url.href);
+}
+integerVersion.addEventListener('change', changeVersion);
+halfVersion.addEventListener('change', changeVersion);
 let loading = null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let running = !reducedMotion.matches;
@@ -80,7 +106,9 @@ speed.addEventListener('input', () => {
 speed.dispatchEvent(new Event('input'));
 share.addEventListener('click', async () => {
   // Capture before any asynchronous work; keep this exact frame visible.
-  const url = momentURL(system.time, nonPrimeToggle.checked);
+  const shared = new URL(alternating ? location.href : momentURL(system.time, nonPrimeToggle.checked));
+  shared.hash = String(system.time);
+  const url = shared.href;
   running = false;
   syncPlay();
   share.disabled = true;
@@ -111,7 +139,11 @@ share.addEventListener('click', async () => {
 async function loadMoment() {
   loading?.abort();
   loading = null;
-  const time = parseMoment(location.hash);
+  const time = parseMoment(location.hash, alternating ? 1.5 : 2);
+  if (alternating && time > 100000) {
+    status.textContent = 'Experiment supports start numbers up to 100000';
+    return;
+  }
   if (time === null) {
     play.disabled = share.disabled = false;
     status.textContent = location.hash ? 'Invalid start number' : '';
