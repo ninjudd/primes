@@ -1,7 +1,7 @@
 import { phase, radius, capacity } from './model.js?v=first-shot';
 
 function dotRadiusScale(system) {
-  return system.divisions === 4 ? .5 : system.divisions === 2 ? .75 : 1;
+  return system.divisions === 4 ? .6 : system.divisions === 2 ? .8 : 1;
 }
 
 function orbitPhase(value, system) {

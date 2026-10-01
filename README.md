@@ -121,6 +121,6 @@ The version selector also offers ¼ (`#1.25/4`). It starts at 1.25 and fires up 
 
 The concentric-circle icon toggles the rings without hiding dots or beams. Hidden rings use `rings=0` in the URL and are preserved in shared moments and version switches.
 
-Dot radii scale with the selected step: full size for 1, 75% size for ½, and 50% size for ¼. Glow, impact marks, and the center dot scale with them.
+Dot radii scale with the selected step: full size for 1, 80% size for ½, and 60% size for ¼. Glow, impact marks, and the center dot scale with them.
 
 Initial playback and reset begin with only the center dot, just before the first birth. A beam creates the first circle at 2, 1.5, or 1.25 for the selected version. Shared moments during this opening shot restore the in-flight beam without a premature circle.

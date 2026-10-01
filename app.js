@@ -1,7 +1,7 @@
 import { parseMoment, momentURL, momentHash, momentDivisions } from './sharing.js?v=hash-only';
 import { AlternatingSystem } from './alternating.js?v=first-shot';
 import { OrbitSystem } from './model.js?v=first-shot';
-import { OrbitRenderer } from './renderer.js?v=first-shot';
+import { OrbitRenderer } from './renderer.js?v=dot-80-60';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
