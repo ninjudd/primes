@@ -20,15 +20,28 @@ const alternating = new URLSearchParams(location.search).get('experiment') === '
 const system = alternating
   ? new AlternatingSystem() : new OrbitSystem();
 if (alternating) {
-  document.querySelector('.number-set').classList.add('experiment');
   canvas.setAttribute('aria-label', 'Alternating orbits. Integer shots fire upward; half-integer shots fire downward. Gold dots are unblocked births; gray dots show blocked candidates.');
-  for (const [input, text, name] of [[primeToggle, 'Born', 'Unblocked births'], [nonPrimeToggle, 'All', 'All candidates']]) {
+  for (const [input, text, name] of [[primeToggle, '𝔹', 'Unblocked births'], [nonPrimeToggle, '𝔸', 'All candidates']]) {
     input.setAttribute('aria-label', name);
     const label = document.querySelector(`label[for="${input.id}"]`);
     label.textContent = text;
     label.title = name;
   }
 }
+const integerVersion = document.querySelector('#integer-version');
+const halfVersion = document.querySelector('#half-version');
+integerVersion.checked = !alternating;
+halfVersion.checked = alternating;
+function changeVersion() {
+  const url = new URL(location.href);
+  if (halfVersion.checked) url.searchParams.set('experiment', 'alternating');
+  else url.searchParams.delete('experiment');
+  // Restore this exact moment in the other system, paused for comparison.
+  url.hash = String(halfVersion.checked ? Math.min(system.time, 100000) : system.time);
+  location.assign(url.href);
+}
+integerVersion.addEventListener('change', changeVersion);
+halfVersion.addEventListener('change', changeVersion);
 let loading = null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let running = !reducedMotion.matches;

@@ -25,12 +25,11 @@ button:disabled { opacity: .4; cursor: default; }
 #share-link[hidden] { display: none; }
 
 /* Native radios keep arrow-key selection and screen-reader semantics. */
-.number-set { display: flex; position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%); padding: 3px; border: 1px solid #263237; border-radius: 999px; background: #10181de8; }
+.view-options { display: flex; gap: 12px; position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%); }
+.number-set { display: flex; padding: 3px; border: 1px solid #263237; border-radius: 999px; background: #10181de8; }
 .number-set input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .number-set label { display: grid; place-items: center; width: 44px; height: 32px; border-radius: 999px; font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-size: 23px; color: #718488; cursor: pointer; user-select: none; }
 .number-set label:hover { color: #bacdce; }
 .number-set input:checked + label { background: #26363b; color: #ebd6a5; }
 .number-set input:focus-visible + label { outline: 2px solid #eddaa9; outline-offset: 2px; }
-@media (max-height: 420px) { .number-set { bottom: 74px; } }
-
-.number-set.experiment label { width: 58px; font-family: inherit; font-size: 13px; }
+@media (max-height: 420px) { .view-options { bottom: 74px; } }
