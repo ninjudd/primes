@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { AlternatingSystem } from '../alternating.js';
 import { OrbitSystem } from '../model.js';
 import { parseMoment, momentURL, momentHash, momentDivisions } from '../sharing.js';
 
@@ -21,11 +22,11 @@ test('pause, share and hidden tabs stop scheduling; reset and resume keep one lo
   let copied;
   const context = {
     parseMoment, momentURL, momentHash, momentDivisions, AbortController, URLSearchParams, URL,
-    location: { hash: '', pathname: '/primes/', search: '' },
+    location: { href: 'http://localhost/primes/', hash: '', pathname: '/primes/', search: '' },
     history: { replaceState() {} },
     navigator: { clipboard: { async writeText(url) { copied = url; } } },
     document: doc, window: element(), matchMedia: () => media,
-    OrbitSystem, OrbitRenderer: class { resize() {} draw() { draws++; } },
+    OrbitSystem, AlternatingSystem, OrbitRenderer: class { resize() {} draw() { draws++; } },
     ResizeObserver: class { observe() {} }, Event: class { constructor(type) { this.type = type; } },
     requestAnimationFrame(fn) { const id = ++nextId; queue.set(id, fn); return id; },
     cancelAnimationFrame(id) { queue.delete(id); },
@@ -47,6 +48,24 @@ test('pause, share and hidden tabs stop scheduling; reset and resume keep one lo
   assert.equal(queue.size, 1);
   const [id, frame] = [...queue][0]; queue.delete(id); frame(100);
   assert.equal(queue.size, 1);
+  elements['#speed'].value = '2';
+  elements['#speed'].listeners.input();
+  elements['#quarter-version'].checked = true;
+  elements['#integer-version'].checked = false;
+  await elements['#quarter-version'].listeners.change();
+  assert.equal(queue.size, 1);
+  assert.equal(elements['#speed-value'].value, '4×');
+  assert.equal(vm.runInNewContext('rate', context), 4);
+  elements['#play'].listeners.click();
+  elements['#quarter-version'].checked = false;
+  elements['#half-version'].checked = true;
+  await elements['#half-version'].listeners.change();
+  assert.equal(queue.size, 0);
+  assert.equal(elements['#speed-value'].value, '4×');
+  elements['#half-version'].checked = false;
+  elements['#integer-version'].checked = true;
+  await elements['#integer-version'].listeners.change();
+  assert.equal(queue.size, 0);
   await elements['#share'].listeners.click();
   assert.equal(copied, 'https://ninjudd.com/primes#1.5');
   assert.equal(queue.size, 0);

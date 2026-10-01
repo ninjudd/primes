@@ -33,9 +33,9 @@ const primeToggle = document.querySelector('#primes-only');
 const nonPrimeToggle = document.querySelector('#non-primes');
 nonPrimeToggle.checked = new URLSearchParams(location.search).get('nonprimes') === '1';
 primeToggle.checked = !nonPrimeToggle.checked;
-const divisions = momentDivisions(location.hash);
-const alternating = divisions !== 1;
-const system = alternating
+let divisions = momentDivisions(location.hash);
+let alternating = divisions !== 1;
+let system = alternating
   ? new AlternatingSystem(divisions) : new OrbitSystem();
 system.reset({ intro: true });
 if (alternating) {
@@ -53,13 +53,40 @@ const quarterVersion = document.querySelector('#quarter-version');
 integerVersion.checked = divisions === 1;
 halfVersion.checked = divisions === 2;
 quarterVersion.checked = divisions === 4;
-function changeVersion() {
+async function changeVersion() {
+  const nextDivisions = quarterVersion.checked ? 4 : halfVersion.checked ? 2 : 1;
+  const time = Math.max(1 + .5 / nextDivisions, nextDivisions > 1 ? Math.min(system.time, 100000) : system.time);
+  loading?.abort();
+  const controller = new AbortController();
+  loading = controller;
+  schedule();
+  play.disabled = share.disabled = true;
+  const nextSystem = nextDivisions === 1 ? new OrbitSystem() : new AlternatingSystem(nextDivisions);
+  const restored = await nextSystem.seek(time, { signal: controller.signal });
+  if (loading !== controller) return;
+  loading = null;
+  play.disabled = share.disabled = false;
+  if (!restored) { schedule(); return; }
+  system = nextSystem;
+  divisions = nextDivisions;
+  alternating = divisions !== 1;
+  integerVersion.checked = divisions === 1;
+  halfVersion.checked = divisions === 2;
+  quarterVersion.checked = divisions === 4;
+  primeToggle.setAttribute('aria-label', alternating ? 'Unblocked births' : 'Prime numbers');
+  nonPrimeToggle.setAttribute('aria-label', alternating ? 'All candidates' : 'All positive integers');
+  canvas.setAttribute('aria-label', alternating
+    ? 'Alternating number orbits. Shots rotate clockwise through the selected directions.'
+    : 'Concentric prime orbits. Each orbit begins at the top and moves clockwise.');
   const url = new URL(location.href);
   url.searchParams.delete('experiment');
-  const nextDivisions = quarterVersion.checked ? 4 : halfVersion.checked ? 2 : 1;
-  // Restore this exact moment in the other system, paused for comparison.
-  url.hash = momentHash(nextDivisions > 1 ? Math.max(1 + 1 / nextDivisions, Math.min(system.time, 100000)) : Math.max(2, system.time), nextDivisions);
-  location.assign(url.href);
+  url.hash = momentHash(system.time, divisions);
+  history.replaceState(null, '', url.pathname + url.search + url.hash);
+  renderer.count = -1;
+  status.textContent = '';
+  fallback.hidden = true;
+  draw();
+  syncPlay();
 }
 integerVersion.addEventListener('change', changeVersion);
 halfVersion.addEventListener('change', changeVersion);
@@ -93,7 +120,7 @@ function schedule() {
   if (frameId !== null) cancelAnimationFrame(frameId);
   frameId = null;
   previous = null;
-  if (running && !document.hidden) frameId = requestAnimationFrame(frame);
+  if (running && !document.hidden && !loading) frameId = requestAnimationFrame(frame);
 }
 
 function syncPlay() {
@@ -118,6 +145,7 @@ reset.addEventListener('click', () => {
   history.replaceState(null, '', location.pathname + location.search + (alternating ? momentHash(system.time, divisions) : ''));
   previous = null;
   draw();
+  schedule();
 });
 speed.addEventListener('input', () => {
   rate = 2 ** Number(speed.value);
@@ -202,7 +230,7 @@ window.addEventListener('resize', resize);
 
 function frame(timestamp) {
   frameId = null;
-  if (!running || document.hidden) return;
+  if (!running || document.hidden || loading) return;
   if (running && !document.hidden && previous !== null) {
     // Avoid a jump after a suspended tab or a stalled frame.
     system.advance(Math.min((timestamp - previous) / 1000, 0.1) * rate);
