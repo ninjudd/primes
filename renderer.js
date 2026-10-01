@@ -1,4 +1,4 @@
-import { phase, radius, capacity } from './model.js?v=beam';
+import { phase, radius, capacity } from './model.js?v=first-shot';
 
 function dotRadiusScale(system) {
   return system.divisions === 4 ? .5 : system.divisions === 2 ? .75 : 1;
@@ -155,7 +155,7 @@ export class OrbitRenderer {
     if (showNonPrimes) {
       // Extra dots have no glow and are drawn underneath the prime dots.
       ctx.globalAlpha = .22 * Math.min(style.dotOpacity, Math.sqrt(outer / (system.time + 4) / .3));
-      for (const number of nonPrimes(system.time, system.primes, 1 / (system.divisions || 1))) {
+      for (const number of nonPrimes(system.primes.length ? system.time : 0, system.primes, 1 / (system.divisions || 1))) {
         const r = radius(number, system.time, outer);
         const angle = orbitPhase(number, system) - Math.PI / 2;
         ctx.drawImage(this.dimSprite, Math.cos(angle) * r - 4, Math.sin(angle) * r - 4, 8, 8);
@@ -235,7 +235,7 @@ export class OrbitRenderer {
       ctx.strokeStyle = 'rgba(128,157,155,.12)';
       // Merge rings that occupy the same physical pixel at dense scales.
       let lastPixel = -1;
-      for (const number of nonPrimes(system.time, system.primes, 1 / (system.divisions || 1))) {
+      for (const number of nonPrimes(system.primes.length ? system.time : 0, system.primes, 1 / (system.divisions || 1))) {
         const r = radius(number, system.time, outer);
         const pixel = Math.round(r * this.pixelRatio);
         if (pixel === lastPixel) continue;

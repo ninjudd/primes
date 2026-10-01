@@ -1,7 +1,7 @@
 import { parseMoment, momentURL, momentHash, momentDivisions } from './sharing.js?v=hash-only';
-import { AlternatingSystem } from './alternating.js?v=quarter';
-import { OrbitSystem } from './model.js?v=beam';
-import { OrbitRenderer } from './renderer.js?v=larger-dots';
+import { AlternatingSystem } from './alternating.js?v=first-shot';
+import { OrbitSystem } from './model.js?v=first-shot';
+import { OrbitRenderer } from './renderer.js?v=first-shot';
 
 const canvas = document.querySelector('canvas');
 const renderer = new OrbitRenderer(canvas);
@@ -37,6 +37,7 @@ const divisions = momentDivisions(location.hash);
 const alternating = divisions !== 1;
 const system = alternating
   ? new AlternatingSystem(divisions) : new OrbitSystem();
+system.reset({ intro: true });
 if (alternating) {
   canvas.setAttribute('aria-label', 'Alternating orbits. Shots rotate clockwise through the selected directions. Gold dots are unblocked births; gray dots show blocked candidates.');
   for (const [input, text, name] of [[primeToggle, 'ℙ', 'Unblocked births'], [nonPrimeToggle, 'ℕ', 'All candidates']]) {
@@ -113,7 +114,7 @@ reset.addEventListener('click', () => {
   play.disabled = share.disabled = false;
   status.textContent = '';
   fallback.hidden = true;
-  system.reset();
+  system.reset({ intro: true });
   history.replaceState(null, '', location.pathname + location.search + (alternating ? momentHash(system.time, divisions) : ''));
   previous = null;
   draw();
@@ -162,7 +163,7 @@ async function loadMoment() {
   }
   loading?.abort();
   loading = null;
-  const time = parseMoment(location.hash, alternating ? 1 + 1 / divisions : 2);
+  const time = parseMoment(location.hash, 1 + .5 / divisions);
   if (alternating && time > 100000) {
     status.textContent = 'Experiment supports start numbers up to 100000';
     return;

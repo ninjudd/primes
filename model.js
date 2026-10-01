@@ -18,17 +18,23 @@ export function phase(prime, time) {
 export class OrbitSystem {
   constructor() { this.reset(); }
 
-  reset() {
-    this.time = 2;
-    this.primes = [2];
-    this.nextPrime = 3;
+  reset({ intro = false } = {}) {
+    this.time = intro ? 1.5 : 2;
+    this.primes = intro ? [] : [2];
+    this.nextPrime = intro ? 2 : 3;
     this.pending = 0;
     this.beam = { number: 2, blocker: null };
   }
 
   async seek(time, { signal, yieldControl = () => new Promise(resolve => setTimeout(resolve, 0)) } = {}) {
-    if (!Number.isFinite(time) || time < 2 || time > Number.MAX_SAFE_INTEGER - 1024) {
+    if (!Number.isFinite(time) || time < 1.5 || time > Number.MAX_SAFE_INTEGER - 1024) {
       throw new RangeError('Invalid start time');
+    }
+    if (time < 2) {
+      if (signal?.aborted) return false;
+      this.reset({ intro: true });
+      this.time = time;
+      return true;
     }
     const target = new OrbitSystem();
     let candidate = 3;
@@ -68,7 +74,7 @@ export class OrbitSystem {
     this.beam = this.eventAt(nextInteger);
     if (nextInteger === this.nextPrime) {
       this.primes.push(this.nextPrime);
-      let candidate = this.nextPrime + 2;
+      let candidate = this.nextPrime === 2 ? 3 : this.nextPrime + 2;
       while (!this.isPrime(candidate)) candidate += 2;
       this.nextPrime = candidate;
     }

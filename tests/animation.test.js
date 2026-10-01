@@ -48,7 +48,7 @@ test('pause, share and hidden tabs stop scheduling; reset and resume keep one lo
   const [id, frame] = [...queue][0]; queue.delete(id); frame(100);
   assert.equal(queue.size, 1);
   await elements['#share'].listeners.click();
-  assert.equal(copied, 'https://ninjudd.com/primes#2');
+  assert.equal(copied, 'https://ninjudd.com/primes#1.5');
   assert.equal(queue.size, 0);
   assert.equal(elements['#share-status'].textContent, 'Link copied');
   context.location.hash = '#997.125';

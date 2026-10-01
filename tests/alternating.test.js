@@ -78,3 +78,29 @@ test('quarter shots visit all four directions and collision tests match geometry
   assert.equal(restored.time, 1.25);
   assert.equal(restored.divisions, 4);
 });
+
+test('startup shots travel before the first circle is born in every version', async () => {
+  const { OrbitSystem } = await import('../model.js');
+  for (const divisions of [1, 2, 4]) {
+    const system = divisions === 1 ? new OrbitSystem() : new AlternatingSystem(divisions);
+    system.reset({ intro: true });
+    const first = 1 + 1 / divisions;
+    assert.equal(system.primes.length, 0);
+    system.advance(.05 / divisions);
+    const beam = beamStyle(system, 300);
+    assert.equal(beam.number, first);
+    assert.equal(beam.impact, false);
+    assert.ok(beam.progress > 0 && beam.progress < 1);
+    const restored = divisions === 1 ? new OrbitSystem() : new AlternatingSystem(divisions);
+    await restored.seek(system.time);
+    assert.deepEqual(restored.primes, []);
+    assert.deepEqual(beamStyle(restored, 300), beam);
+    system.advance(first - system.time);
+    assert.deepEqual(system.primes, [first]);
+    assert.equal(beamStyle(system, 300).impact, true);
+    if (divisions === 1) {
+      system.advance(1);
+      assert.deepEqual(system.primes, [2, 3]);
+    }
+  }
+});

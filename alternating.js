@@ -1,4 +1,4 @@
-import { OrbitSystem } from './model.js?v=beam';
+import { OrbitSystem } from './model.js?v=first-shot';
 
 // Work in integer ticks so collision decisions use exact integer arithmetic.
 export class AlternatingSystem extends OrbitSystem {
@@ -8,13 +8,14 @@ export class AlternatingSystem extends OrbitSystem {
     this.reset();
   }
 
-  reset() {
+  reset({ intro = false } = {}) {
     super.reset();
     this.alternating = true;
     this.divisions ??= 2;
-    this.time = 1 + 1 / this.divisions;
-    this.primes = [this.time];
-    this.beam = { number: this.time, blocker: null };
+    const first = 1 + 1 / this.divisions;
+    this.time = intro ? first - .5 / this.divisions : first;
+    this.primes = intro ? [] : [first];
+    this.beam = { number: first, blocker: null };
   }
 
   eventAt(number) {
@@ -44,8 +45,14 @@ export class AlternatingSystem extends OrbitSystem {
   }
 
   async seek(time, { signal, yieldControl = () => new Promise(resolve => setTimeout(resolve, 0)) } = {}) {
-    if (!Number.isFinite(time) || time < 1 + 1 / this.divisions || time > 100000) {
+    if (!Number.isFinite(time) || time < 1 + .5 / this.divisions || time > 100000) {
       throw new RangeError('Start time is outside the experiment range');
+    }
+    if (time < 1 + 1 / this.divisions) {
+      if (signal?.aborted) return false;
+      this.reset({ intro: true });
+      this.time = time;
+      return true;
     }
     const target = new AlternatingSystem(this.divisions);
     let count = 0;
