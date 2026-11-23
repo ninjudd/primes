@@ -2,7 +2,7 @@
 
 A moving portrait of the prime numbers. Each prime begins an orbit of its own, surrounding all those that came before it.
 
-[Watch Prime Orbits](https://ninjudd.com/primes/)
+[Watch Prime Orbits](https://ninjudd.com/primes)
 
 ## The riddle
 
@@ -85,7 +85,7 @@ Use Node.js 24 for the tests. Open http://127.0.0.1:8080 in a browser. Stop the 
 
 ## GitHub Pages
 
-The workflow checks pull requests and publishes only pushes to `main`, after checks pass. Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The site is served at [ninjudd.com/primes](https://ninjudd.com/primes/), using the account’s existing Pages domain. Only the static site files and social preview image are included in the deployment artifact.
+The workflow checks pull requests and publishes only pushes to `main`, after checks pass. Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The site is served at [ninjudd.com/primes](https://ninjudd.com/primes), using the account’s existing Pages domain. Only the static site files and social preview image are included in the deployment artifact.
 
 ## Verification
 
